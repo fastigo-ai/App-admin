@@ -31,35 +31,35 @@ const Customers = () => {
   const [localSearch, setLocalSearch] = useState(search);
   const debouncedSearch = useDebounce(localSearch, 500);
 
-  const fetchCustomers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getAllCustomers({
-        page,
-        limit: 9,
-        search: debouncedSearch,
-        city,
-        status,
-        isPhoneVerified
-      });
-      
-      if (res.success) {
-        setCustomers(res.data);
-        setStats(res.stats);
-        setPagination(res.pagination);
-      }
-    } catch (err: any) {
-      console.error('Error fetching customers:', err);
-      setError('Failed to load customer database.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, debouncedSearch, city, status, isPhoneVerified]);
-
   useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getAllCustomers({
+          page,
+          limit: 9,
+          search: debouncedSearch,
+          city,
+          status,
+          isPhoneVerified
+        });
+        
+        if (res.success) {
+          setCustomers(res.data);
+          setStats(res.stats);
+          setPagination(res.pagination);
+        }
+      } catch (err: any) {
+        console.error('Error fetching customers:', err);
+        setError('Failed to load customer database.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCustomers();
-  }, [fetchCustomers]);
+  }, [page, debouncedSearch, city, status, isPhoneVerified]);
 
   useEffect(() => {
     setSearchParams({ page: page.toString(), city, search: debouncedSearch, status, isPhoneVerified }, { replace: true });

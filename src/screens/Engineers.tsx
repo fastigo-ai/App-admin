@@ -38,35 +38,35 @@ const Engineers = () => {
   const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null);
   const [isDossierOpen, setIsDossierOpen] = useState(false);
 
-  const fetchEngineers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getAllEngineers({
-        page,
-        limit: 9,
-        search: debouncedSearch,
-        status,
-        isBlocked,
-        isVerified
-      });
-      
-      if (res.success) {
-        setEngineers(res.data);
-        setStats(res.stats);
-        setPagination(res.pagination);
-      }
-    } catch (err: any) {
-      console.error('Error fetching engineers:', err);
-      setError('Failed to load fleet data.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, debouncedSearch, status, isBlocked, isVerified]);
-
   useEffect(() => {
+    const fetchEngineers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getAllEngineers({
+          page,
+          limit: 9,
+          search: debouncedSearch,
+          status,
+          isBlocked,
+          isVerified
+        });
+        
+        if (res.success) {
+          setEngineers(res.data);
+          setStats(res.stats);
+          setPagination(res.pagination);
+        }
+      } catch (err: any) {
+        console.error('Error fetching engineers:', err);
+        setError('Failed to load fleet data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchEngineers();
-  }, [fetchEngineers]);
+  }, [page, debouncedSearch, status, isBlocked, isVerified]);
 
   useEffect(() => {
     setSearchParams({ page: page.toString(), status, search: debouncedSearch, isBlocked, isVerified }, { replace: true });
