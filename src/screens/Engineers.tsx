@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, MapPin, Phone, Mail, Star, Clock, AlertCircle, Loader2, Filter, RefreshCcw, UserCheck, UserMinus, ChevronLeft, ChevronRight, Activity, Shield } from 'lucide-react';
-import { getAllEngineers } from '../api/engineerApi';
+import { Search, MapPin, Phone, Mail, Star, Clock, AlertCircle, Loader2, Filter, RefreshCcw, UserCheck, Activity, Shield, Ban, CheckCircle, ChevronLeft, ChevronRight, Briefcase } from 'lucide-react';
+import { getAllEngineers, toggleBlockEngineer } from '../api/engineerApi';
 import { useSearchParams } from 'react-router-dom';
 import { useDebounce } from '../hooks/useDebounce';
+import toast from 'react-hot-toast';
 
 const Engineers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // URL Persistent State
   const page = parseInt(searchParams.get('page') || '1');
   const status = searchParams.get('status') || 'all';
   const search = searchParams.get('search') || '';
@@ -49,7 +49,7 @@ const Engineers = () => {
       }
     } catch (err: any) {
       console.error('Error fetching engineers:', err);
-      setError('Failed to load engineers. Please try again later.');
+      setError('Failed to load fleet data.');
     } finally {
       setLoading(false);
     }
@@ -63,6 +63,20 @@ const Engineers = () => {
     setSearchParams({ page: page.toString(), status, search: debouncedSearch }, { replace: true });
   }, [debouncedSearch, page, status, setSearchParams]);
 
+  const handleToggleBlock = async (id: string, currentlyBlocked: boolean) => {
+    try {
+      const res = await toggleBlockEngineer(id, !currentlyBlocked);
+      if (res.success) {
+        toast.success(res.message);
+        setEngineers(prev => prev.map(eng => 
+          eng._id === id ? { ...eng, isBlocked: !currentlyBlocked } : eng
+        ));
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Action failed');
+    }
+  };
+
   const handlePageChange = (newPage: number) => {
     setSearchParams({ page: newPage.toString(), status, search: debouncedSearch });
   };
@@ -71,23 +85,14 @@ const Engineers = () => {
     setSearchParams({ page: '1', status: newStatus, search: debouncedSearch });
   };
 
-  const getStatusBadge = (status?: string) => {
+  const getStatusBadge = (status?: string, isBlocked?: boolean) => {
+    if (isBlocked) return 'bg-red-50 text-red-700 border-red-100';
     const s = status?.toUpperCase() || 'OFFLINE';
     switch (s) {
       case 'ONLINE': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
       case 'BUSY': return 'bg-amber-50 text-amber-700 border-amber-100';
       case 'OFFLINE': return 'bg-gray-50 text-gray-700 border-gray-100';
       default: return 'bg-gray-50 text-gray-700 border-gray-100';
-    }
-  };
-
-  const getStatusIndicator = (status?: string) => {
-    const s = status?.toUpperCase() || 'OFFLINE';
-    switch (s) {
-      case 'ONLINE': return 'bg-emerald-500 ring-emerald-100';
-      case 'BUSY': return 'bg-amber-500 ring-amber-100';
-      case 'OFFLINE': return 'bg-gray-400 ring-gray-100';
-      default: return 'bg-gray-400 ring-gray-100';
     }
   };
 
@@ -100,7 +105,7 @@ const Engineers = () => {
             <Activity className="w-6 h-6 text-blue-400" />
           </div>
         </div>
-        <p className="text-gray-500 font-black uppercase tracking-widest mt-6 animate-pulse">Synchronizing Fleet...</p>
+        <p className="text-gray-500 font-black uppercase tracking-widest mt-6 animate-pulse">Syncing Fleet...</p>
       </div>
     );
   }
@@ -116,7 +121,7 @@ const Engineers = () => {
             </div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tight">Engineer Fleet</h1>
           </div>
-          <p className="text-gray-500 font-bold text-lg">Manage, monitor and optimize your service professional network.</p>
+          <p className="text-gray-500 font-bold text-lg">Real-time command and control for your service network.</p>
         </div>
         <button 
           onClick={fetchEngineers}
@@ -135,9 +140,9 @@ const Engineers = () => {
           { label: 'On Service', value: stats.busyCount, icon: Clock, color: 'amber', sub: 'Currently occupied' },
           { label: 'Avg Rating', value: stats.avgRating?.toFixed(1) || '0.0', icon: Star, color: 'purple', sub: 'Customer satisfaction' }
         ].map((item, idx) => (
-          <div key={idx} className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm hover:shadow-xl transition-all duration-300 group">
+          <div key={idx} className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm group">
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-4 rounded-3xl bg-${item.color}-50 text-${item.color}-600 group-hover:scale-110 transition-transform`}>
+              <div className={`p-4 rounded-3xl bg-${item.color}-50 text-${item.color}-600 group-hover:rotate-12 transition-transform`}>
                 <item.icon className="w-6 h-6" />
               </div>
               <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{item.sub}</span>
@@ -183,16 +188,22 @@ const Engineers = () => {
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h3 className="text-2xl font-black text-gray-900 mb-2">Fleet Sync Failed</h3>
           <p className="text-gray-600 font-bold mb-8">{error}</p>
-          <button onClick={fetchEngineers} className="px-8 py-3 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all">Retry Connection</button>
+          <button onClick={fetchEngineers} className="px-8 py-3 bg-red-600 text-white font-black rounded-2xl">Retry Connection</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {engineers.map((engineer) => (
-            <div key={engineer._id} className="bg-white rounded-[2.5rem] border-2 border-gray-50 p-8 hover:shadow-2xl hover:border-blue-100 transition-all duration-500 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8">
-                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getStatusBadge(engineer.status)}`}>
-                  {engineer.status || 'OFFLINE'}
+            <div key={engineer._id} className={`bg-white rounded-[2.5rem] border-2 p-8 transition-all duration-500 group relative overflow-hidden ${engineer.isBlocked ? 'border-red-100 opacity-80' : 'border-gray-50 hover:shadow-2xl hover:border-blue-100'}`}>
+              
+              {/* Top Bar */}
+              <div className="flex items-center justify-between mb-8">
+                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getStatusBadge(engineer.status, engineer.isBlocked)}`}>
+                  {engineer.isBlocked ? 'BLOCKED' : (engineer.status || 'OFFLINE')}
                 </span>
+                <div className="flex items-center space-x-2">
+                   <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                   <span className="text-sm font-black text-gray-900">{engineer.rating?.toFixed(1) || '0.0'}</span>
+                </div>
               </div>
 
               <div className="flex items-center space-x-6 mb-8">
@@ -204,15 +215,16 @@ const Engineers = () => {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-white ring-4 ring-offset-0 ${getStatusIndicator(engineer.status)} animate-pulse`}></div>
+                  {!engineer.isBlocked && (
+                    <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-white ring-4 ring-offset-0 ${engineer.status === 'ONLINE' ? 'bg-emerald-500 animate-pulse ring-emerald-100' : engineer.status === 'BUSY' ? 'bg-amber-500 animate-pulse ring-amber-100' : 'bg-gray-400 ring-gray-100'}`}></div>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-gray-900 leading-tight mb-1">{engineer.name}</h3>
-                  <div className="flex items-center space-x-2">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="text-sm font-black text-gray-900">{engineer.rating?.toFixed(1) || '0.0'}</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">• {engineer.completedJobs || 0} Jobs</span>
-                  </div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center">
+                    <Briefcase className="w-3 h-3 mr-1" />
+                    {engineer.completedJobs || 0} Finished Jobs
+                  </p>
                 </div>
               </div>
 
@@ -225,39 +237,41 @@ const Engineers = () => {
                 </div>
                 <div className="flex items-center space-x-4 group/item">
                   <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
-                    <Mail className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 truncate">{engineer.email || 'No Email'}</p>
-                </div>
-                <div className="flex items-start space-x-4 group/item">
-                  <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
                     <MapPin className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
                   </div>
-                  <p className="text-sm font-bold text-gray-600 line-clamp-2">{engineer.address || 'Location not updated'}</p>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">H3 Index: {engineer.h3Index || 'N/A'}</p>
+                    <p className="text-sm font-bold text-gray-600 truncate">{engineer.address || 'Location not updated'}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex flex-wrap gap-2 mb-10">
                 {(engineer.skills || []).slice(0, 3).map((skill: string, idx: number) => (
                   <span key={idx} className="px-3 py-1.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-xl">
                     {skill}
                   </span>
                 ))}
-                {engineer.skills?.length > 3 && (
-                  <span className="px-3 py-1.5 bg-gray-100 text-gray-500 text-[9px] font-black uppercase tracking-widest rounded-xl">
-                    +{engineer.skills.length - 3} More
-                  </span>
-                )}
               </div>
 
+              {/* Action Toolbar */}
               <div className="flex items-center justify-between pt-6 border-t-2 border-gray-50">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Active Requests</span>
+                  <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Active Load</span>
                   <span className="text-lg font-black text-gray-900">{engineer.assignedOrders?.length || 0} Orders</span>
                 </div>
-                <button className="px-6 py-3 bg-gray-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-200 transition-all active:scale-95">
-                  View Dossier
-                </button>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => handleToggleBlock(engineer._id, !!engineer.isBlocked)}
+                    className={`p-3 rounded-2xl transition-all active:scale-90 ${engineer.isBlocked ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
+                    title={engineer.isBlocked ? 'Unblock Engineer' : 'Block Engineer'}
+                  >
+                    {engineer.isBlocked ? <CheckCircle className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
+                  </button>
+                  <button className="px-6 py-3 bg-gray-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-blue-600 transition-all active:scale-95">
+                    View Dossier
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -270,7 +284,7 @@ const Engineers = () => {
           <button
             disabled={page === 1}
             onClick={() => handlePageChange(page - 1)}
-            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 transition-all hover:border-blue-500 text-gray-600 active:scale-90"
+            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 hover:border-blue-500 text-gray-600 transition-all active:scale-90"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
@@ -280,7 +294,7 @@ const Engineers = () => {
           <button
             disabled={page === pagination.totalPages}
             onClick={() => handlePageChange(page + 1)}
-            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 transition-all hover:border-blue-500 text-gray-600 active:scale-90"
+            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 hover:border-blue-500 text-gray-600 transition-all active:scale-90"
           >
             <ChevronRight className="w-6 h-6" />
           </button>

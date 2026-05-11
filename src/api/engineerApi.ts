@@ -14,3 +14,7 @@ export const getAvailableEngineers = async () => {
   const response = await api.get('/engineer/getAvialbleEngineers');
   return response.data;
 };
+export const toggleBlockEngineer = async (id: string, isBlocked: boolean) => {
+  const response = await api.put(`/engineer/admin/toggleBlock/${id}`, { isBlocked });
+  return response.data;
+};
