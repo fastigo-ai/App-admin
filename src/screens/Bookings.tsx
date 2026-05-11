@@ -299,7 +299,8 @@ const Bookings = () => {
             <option value="Accepted">Accepted</option>
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Cancelled">Cancelled (All)</option>
+            <option value="CancelledPaid">Cancelled (Paid / Refund Needed)</option>
             <option value="Rejected">Rejected</option>
           </select>
           
@@ -440,6 +441,11 @@ const Bookings = () => {
                       <p className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${getPaymentBadge(booking.paymentStatus).split(' ')[1]}`}>
                         {booking.paymentStatus || "PENDING"}
                       </p>
+                      {booking.orderStatus === 'Cancelled' && (booking.paymentStatus === 'PAID' || booking.paymentStatus === 'paid') && (
+                        <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black bg-red-100 text-red-600 border border-red-200 animate-pulse uppercase tracking-tighter">
+                          Refund Needed
+                        </div>
+                      )}
                     </td>
                     <td className="px-8 py-6 text-right">
                       <button
