@@ -11,6 +11,7 @@ import Payments from './screens/Payments';
 import Categories from './screens/Categories';
 import Login from './screens/Login';
 import api from './api/api';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -80,6 +81,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+      <Toaster position="top-right" reverseOrder={false} />
       {/* Mobile Header */}
       <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center space-x-2">
