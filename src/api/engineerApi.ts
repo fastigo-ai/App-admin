@@ -18,3 +18,8 @@ export const toggleBlockEngineer = async (id: string, isBlocked: boolean) => {
   const response = await api.put(`/engineer/admin/toggleBlock/${id}`, { isBlocked });
   return response.data;
 };
+
+export const getEngineerDossier = async (id: string) => {
+  const response = await api.get(`/engineer/admin/dossier/${id}`);
+  return response.data;
+};

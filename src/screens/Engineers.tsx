@@ -4,6 +4,7 @@ import { getAllEngineers, toggleBlockEngineer } from '../api/engineerApi';
 import { useSearchParams } from 'react-router-dom';
 import { useDebounce } from '../hooks/useDebounce';
 import toast from 'react-hot-toast';
+import EngineerDossierModal from '../components/EngineerDossierModal';
 
 const Engineers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,6 +31,10 @@ const Engineers = () => {
   const [error, setError] = useState<string | null>(null);
   const [localSearch, setLocalSearch] = useState(search);
   const debouncedSearch = useDebounce(localSearch, 500);
+
+  // Dossier Modal State
+  const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null);
+  const [isDossierOpen, setIsDossierOpen] = useState(false);
 
   const fetchEngineers = useCallback(async () => {
     try {
@@ -266,9 +271,15 @@ const Engineers = () => {
                     className={`p-3 rounded-2xl transition-all active:scale-90 ${engineer.isBlocked ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
                     title={engineer.isBlocked ? 'Unblock Engineer' : 'Block Engineer'}
                   >
-                    {engineer.isBlocked ? <CheckCircle className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
+                    {engineer.isBlocked ? <CheckCircle2 className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
                   </button>
-                  <button className="px-6 py-3 bg-gray-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-blue-600 transition-all active:scale-95">
+                  <button 
+                    onClick={() => {
+                      setSelectedEngineerId(engineer._id);
+                      setIsDossierOpen(true);
+                    }}
+                    className="px-6 py-3 bg-gray-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-blue-600 transition-all active:scale-95"
+                  >
                     View Dossier
                   </button>
                 </div>
@@ -276,6 +287,17 @@ const Engineers = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Dossier Modal */}
+      {isDossierOpen && selectedEngineerId && (
+        <EngineerDossierModal 
+          engineerId={selectedEngineerId} 
+          onClose={() => {
+            setIsDossierOpen(false);
+            setSelectedEngineerId(null);
+          }}
+        />
       )}
 
       {/* Pagination */}
