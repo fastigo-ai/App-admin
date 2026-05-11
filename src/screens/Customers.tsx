@@ -1,266 +1,256 @@
-import React, { useState } from 'react';
-import { Search, User, Phone, Mail, MapPin, Calendar, Star } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, User, Phone, Mail, MapPin, Calendar, Star, Loader2, Filter, RefreshCcw, TrendingUp, IndianRupee, Users, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getAllCustomers } from '../api/customerApi';
+import { useSearchParams } from 'react-router-dom';
+import { useDebounce } from '../hooks/useDebounce';
 
 const Customers = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [locationFilter, setLocationFilter] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // URL Persistent State
+  const page = parseInt(searchParams.get('page') || '1');
+  const city = searchParams.get('city') || 'all';
+  const search = searchParams.get('search') || '';
 
-  const customers = [
-    {
-      id: 1,
-      name: 'Rajesh Kumar',
-      email: 'rajesh.kumar@email.com',
-      phone: '+91 9876543210',
-      location: 'Sector 15, Noida, UP',
-      joinDate: '2023-08-15',
-      totalBookings: 8,
-      completedServices: 7,
-      totalSpent: '₹12,500',
-      rating: 4.8,
-      lastService: '2024-01-15',
-      preferredServices: ['Laptop Repair', 'Mobile Repair'],
-      avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 2,
-      name: 'Priya Singh',
-      email: 'priya.singh@email.com',
-      phone: '+91 9876543211',
-      location: 'Lajpat Nagar, Delhi',
-      joinDate: '2023-09-22',
-      totalBookings: 5,
-      completedServices: 4,
-      totalSpent: '₹8,900',
-      rating: 4.9,
-      lastService: '2024-01-14',
-      preferredServices: ['AC Services', 'Home Appliances'],
-      avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 3,
-      name: 'Suresh Gupta',
-      email: 'suresh.gupta@email.com',
-      phone: '+91 9876543212',
-      location: 'Gurgaon Sector 21, Haryana',
-      joinDate: '2023-07-10',
-      totalBookings: 12,
-      completedServices: 11,
-      totalSpent: '₹18,750',
-      rating: 4.7,
-      lastService: '2024-01-12',
-      preferredServices: ['Washing Machine', 'Refrigerator'],
-      avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 4,
-      name: 'Anita Devi',
-      email: 'anita.devi@email.com',
-      phone: '+91 9876543213',
-      location: 'Karol Bagh, Delhi',
-      joinDate: '2023-11-05',
-      totalBookings: 3,
-      completedServices: 2,
-      totalSpent: '₹3,200',
-      rating: 4.6,
-      lastService: '2024-01-10',
-      preferredServices: ['Mobile Repair'],
-      avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 5,
-      name: 'Manoj Sharma',
-      email: 'manoj.sharma@email.com',
-      phone: '+91 9876543214',
-      location: 'Dwarka Sector 10, Delhi',
-      joinDate: '2023-06-18',
-      totalBookings: 6,
-      completedServices: 5,
-      totalSpent: '₹9,800',
-      rating: 4.5,
-      lastService: '2024-01-08',
-      preferredServices: ['TV Repair', 'Electronics'],
-      avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?w=150&h=150&fit=crop&crop=face'
-    }
-  ];
-
-  const locations = ['all', 'Delhi', 'Noida', 'Gurgaon', 'Other'];
-
-  const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         customer.phone.includes(searchTerm);
-    const matchesLocation = locationFilter === 'all' || customer.location.includes(locationFilter);
-    return matchesSearch && matchesLocation;
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({
+    totalCustomers: 0,
+    totalRevenue: 0,
+    activeCustomers: 0
   });
+  const [pagination, setPagination] = useState<any>({
+    totalCount: 0,
+    totalPages: 1,
+    currentPage: 1
+  });
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [localSearch, setLocalSearch] = useState(search);
+  const debouncedSearch = useDebounce(localSearch, 500);
+
+  const fetchCustomers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await getAllCustomers({
+        page,
+        limit: 9,
+        search: debouncedSearch,
+        city
+      });
+      
+      if (res.success) {
+        setCustomers(res.data);
+        setStats(res.stats);
+        setPagination(res.pagination);
+      }
+    } catch (err: any) {
+      console.error('Error fetching customers:', err);
+      setError('Failed to load customer database.');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch, city]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+
+  useEffect(() => {
+    setSearchParams({ page: page.toString(), city, search: debouncedSearch }, { replace: true });
+  }, [debouncedSearch, page, city, setSearchParams]);
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams({ page: newPage.toString(), city, search: debouncedSearch });
+  };
+
+  const handleCityChange = (newCity: string) => {
+    setSearchParams({ page: '1', city: newCity, search: debouncedSearch });
+  };
+
+  if (loading && customers.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="relative">
+          <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Users className="w-6 h-6 text-blue-400" />
+          </div>
+        </div>
+        <p className="text-gray-500 font-black uppercase tracking-widest mt-6 animate-pulse">Analyzing Customer Base...</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
-        <p className="text-gray-600 mt-2">Manage your customer base and track their service history.</p>
+    <div className="max-w-[1600px] mx-auto space-y-10 pb-20">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gray-900 rounded-2xl">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Customer Database</h1>
+          </div>
+          <p className="text-gray-500 font-bold text-lg">Comprehensive insights into your user base and their lifetime value.</p>
+        </div>
+        <button 
+          onClick={fetchCustomers}
+          className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-gray-100 rounded-2xl font-black text-gray-600 hover:bg-gray-50 hover:border-gray-200 transition-all shadow-sm active:scale-95"
+        >
+          <RefreshCcw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          <span>Refresh Records</span>
+        </button>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{customers.length}</p>
-            </div>
-            <User className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Customers</p>
-              <p className="text-2xl font-bold text-green-600">{customers.filter(c => new Date(c.lastService) > new Date('2024-01-01')).length}</p>
-            </div>
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-              <div className="w-4 h-4 bg-green-600 rounded-full"></div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Avg Rating</p>
-              <p className="text-2xl font-bold text-amber-600">4.7</p>
-            </div>
-            <Star className="w-8 h-8 text-amber-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-purple-600">₹53,150</p>
-            </div>
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-              <div className="w-4 h-4 bg-purple-600 rounded-full"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by name, email, or phone..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex gap-2 w-full md:w-auto">
-            <select
-              className="flex-1 md:flex-none px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-            >
-              {locations.map(location => (
-                <option key={location} value={location}>
-                  {location === 'all' ? 'All Locations' : location}
-                </option>
-              ))}
-            </select>
-            <button className="flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
-              Filter
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Customers Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredCustomers.map((customer) => (
-          <div key={customer.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <img
-                  src={customer.avatar}
-                  alt={customer.name}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{customer.name}</h3>
-                  <div className="flex items-center mt-1">
-                    <Star className="w-4 h-4 text-amber-500 mr-1" />
-                    <span className="text-sm font-medium text-gray-900">{customer.rating}</span>
-                    <span className="text-xs text-gray-500 ml-1">rating</span>
-                  </div>
-                </div>
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          { label: 'Total Customers', value: stats.totalCustomers, icon: Users, color: 'blue', sub: 'Signed up professionals' },
+          { label: 'Lifetime Revenue', value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'emerald', sub: 'Total transaction volume' },
+          { label: 'Active Users', value: stats.activeCustomers, icon: Activity, color: 'purple', sub: 'Engaged in last 30 days' }
+        ].map((item, idx) => (
+          <div key={idx} className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-4 rounded-3xl bg-${item.color}-50 text-${item.color}-600 group-hover:scale-110 transition-transform`}>
+                <item.icon className="w-6 h-6" />
               </div>
+              <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{item.sub}</span>
             </div>
-
-            <div className="space-y-3 mb-4">
-              <div className="flex items-center text-sm text-gray-600">
-                <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                {customer.email}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                {customer.phone}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                {customer.location}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                Joined {new Date(customer.joinDate).toLocaleDateString()}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-lg font-bold text-blue-600">{customer.totalBookings}</p>
-                <p className="text-xs text-gray-500">Total Bookings</p>
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-green-600">{customer.completedServices}</p>
-                <p className="text-xs text-gray-500">Completed</p>
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-purple-600">{customer.totalSpent}</p>
-                <p className="text-xs text-gray-500">Total Spent</p>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm font-medium text-gray-900 mb-2">Preferred Services</p>
-              <div className="flex flex-wrap gap-1">
-                {customer.preferredServices.map((service, index) => (
-                  <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">
-                    {service}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
-                Last service: {new Date(customer.lastService).toLocaleDateString()}
-              </div>
-              <div className="flex space-x-2">
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                  View History
-                </button>
-                <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
-                  Contact
-                </button>
-              </div>
-            </div>
+            <p className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">{item.label}</p>
+            <p className="text-4xl font-black text-gray-900">{item.value}</p>
           </div>
         ))}
       </div>
+
+      {/* Filter Toolbar */}
+      <div className="bg-white rounded-[2.5rem] p-4 border-2 border-gray-50 shadow-sm flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 relative group">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors" />
+          <input
+            type="text"
+            placeholder="Search by name, phone or email..."
+            className="w-full pl-16 pr-6 py-5 bg-gray-50 border-none rounded-[1.8rem] font-bold text-gray-900 placeholder:text-gray-400 focus:ring-4 focus:ring-blue-500/10 transition-all"
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-3">
+          <div className="relative min-w-[200px]">
+            <Filter className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            <select
+              value={city}
+              onChange={(e) => handleCityChange(e.target.value)}
+              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
+            >
+              <option value="all">All Cities</option>
+              <option value="Noida">Noida</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Gurgaon">Gurgaon</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Fleet Grid */}
+      {error ? (
+        <div className="bg-red-50 rounded-[2.5rem] p-12 text-center border-2 border-red-100">
+          <Loader2 className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h3 className="text-2xl font-black text-gray-900 mb-2">Sync Failed</h3>
+          <p className="text-gray-600 font-bold mb-8">{error}</p>
+          <button onClick={fetchCustomers} className="px-8 py-3 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all">Retry Link</button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          {customers.map((customer) => (
+            <div key={customer._id} className="bg-white rounded-[2.5rem] border-2 border-gray-50 p-8 hover:shadow-2xl hover:border-blue-100 transition-all duration-500 group relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8">
+                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${customer.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-gray-50 text-gray-700 border-gray-100'}`}>
+                  {customer.status || 'PENDING'}
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-6 mb-8">
+                <div className="relative">
+                  <div className="w-20 h-20 bg-gray-100 rounded-[2rem] overflow-hidden group-hover:scale-110 transition-transform duration-500">
+                    <img
+                      src={customer.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=random&size=128&bold=true`}
+                      alt={customer.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-900 leading-tight mb-1">{customer.name}</h3>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-4 h-4 text-emerald-500" />
+                    <span className="text-sm font-black text-gray-900">LTV: ₹{(customer.totalSpent || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center space-x-4 group/item">
+                  <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
+                    <Phone className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
+                  </div>
+                  <p className="text-sm font-bold text-gray-600">{customer.mobile || 'No Phone'}</p>
+                </div>
+                <div className="flex items-center space-x-4 group/item">
+                  <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
+                    <Mail className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
+                  </div>
+                  <p className="text-sm font-bold text-gray-600 truncate">{customer.email || 'No Email'}</p>
+                </div>
+                <div className="flex items-start space-x-4 group/item">
+                  <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
+                    <MapPin className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
+                  </div>
+                  <p className="text-sm font-bold text-gray-600 line-clamp-2">{customer.city || 'Location not updated'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-6 border-t-2 border-gray-50">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Total Bookings</span>
+                  <span className="text-lg font-black text-gray-900">{customer.totalBookings || 0} Orders</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Last Activity</span>
+                  <span className="text-lg font-black text-gray-900">
+                    {customer.lastBookingDate ? new Date(customer.lastBookingDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : 'Never'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center space-x-4 pt-10">
+          <button
+            disabled={page === 1}
+            onClick={() => handlePageChange(page - 1)}
+            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 transition-all hover:border-blue-500 text-gray-600 active:scale-90"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div className="px-8 py-4 bg-gray-900 rounded-[1.5rem] text-white font-black text-sm tracking-widest">
+            PAGE {page} <span className="text-gray-500 mx-2">OF</span> {pagination.totalPages}
+          </div>
+          <button
+            disabled={page === pagination.totalPages}
+            onClick={() => handlePageChange(page + 1)}
+            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 transition-all hover:border-blue-500 text-gray-600 active:scale-90"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
