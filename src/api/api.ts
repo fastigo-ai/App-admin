@@ -28,7 +28,7 @@ api.interceptors.response.use(
 
       try {
         // Try to refresh the token
-        await axios.post(`${base_url}/admin/auth/refresh-token`, {}, { withCredentials: true });
+        await axios.post(`${production_url}/admin/auth/refresh-token`, {}, { withCredentials: true });
         
         // Retry the original request
         return api(originalRequest);

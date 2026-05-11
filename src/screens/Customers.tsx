@@ -118,13 +118,14 @@ const Customers = () => {
       </div>
 
       {/* Analytics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Total Customers', value: stats.totalCustomers, icon: Users, color: 'blue', sub: 'Signed up professionals' },
-          { label: 'Lifetime Revenue', value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'emerald', sub: 'Total transaction volume' },
-          { label: 'Active Users', value: stats.activeCustomers, icon: Activity, color: 'purple', sub: 'Engaged in last 30 days' }
+          { label: 'Live Now', value: stats.onlineCount || 0, icon: Activity, color: 'emerald', sub: 'Currently in app' },
+          { label: 'Lifetime Revenue', value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'purple', sub: 'Total transaction volume' },
+          { label: 'Active Users', value: stats.activeCustomers, icon: TrendingUp, color: 'blue', sub: 'Engaged in last 30 days' }
         ].map((item, idx) => (
-          <div key={idx} className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm hover:shadow-xl transition-all duration-300 group">
+          <div key={idx} className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm group">
             <div className="flex items-center justify-between mb-4">
               <div className={`p-4 rounded-3xl bg-${item.color}-50 text-${item.color}-600 group-hover:scale-110 transition-transform`}>
                 <item.icon className="w-6 h-6" />
@@ -172,6 +173,8 @@ const Customers = () => {
             >
               <option value="all">ALL STATUS</option>
               <option value="active">ACTIVE</option>
+              <option value="ONLINE">ONLINE</option>
+              <option value="OFFLINE">OFFLINE</option>
               <option value="suspended">SUSPENDED</option>
               <option value="pending_verification">PENDING</option>
             </select>
