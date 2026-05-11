@@ -1,12 +1,12 @@
 import api from './api';
 
-export const getAllBookings = async () => {
-  const response = await api.get('/services/allBookings');
+export const getAllBookings = async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
+  const response = await api.get('/services/admin/allBookings', { params });
   return response.data;
 };
 
 export const updateOrderStatus = async (id: string, status: string) => {
-  const response = await api.put(`/services/updateOrderStatus/${id}`, { status });
+  const response = await api.put(`/services/admin/updateOrderStatus/${id}`, { status });
   return response.data;
 };
 

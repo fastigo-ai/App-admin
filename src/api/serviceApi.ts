@@ -1,7 +1,7 @@
 import api from './api';
 
-export const getAllServices = async () => {
-  const response = await api.get('/services/allServicesDashboard');
+export const getAllServices = async (params?: { page?: number; limit?: number; search?: string; category?: string; planType?: string }) => {
+  const response = await api.get('/services/admin/allServicesDashboard', { params });
   return response.data;
 };
 
@@ -39,8 +39,8 @@ export const deleteService = async (id: string) => {
 };
 
 // Category APIs
-export const getAllCategories = async () => {
-  const response = await api.get('/services/category');
+export const getAllCategories = async (params?: { page?: number; limit?: number; search?: string }) => {
+  const response = await api.get('/services/category', { params });
   return response.data;
 };
 

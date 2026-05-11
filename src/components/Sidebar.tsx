@@ -8,6 +8,7 @@ import {
   Settings,
   LayoutGrid,
   Tag,
+  LogOut,
   X
 } from 'lucide-react';
 
@@ -16,9 +17,10 @@ interface SidebarProps {
   setActiveScreen: (screen: string) => void;
   isMobileOpen?: boolean;
   onClose?: () => void;
+  onLogout: () => void;
 }
 
-const Sidebar = ({ activeScreen, setActiveScreen, isMobileOpen, onClose }: SidebarProps) => {
+const Sidebar = ({ activeScreen, setActiveScreen, isMobileOpen, onClose, onLogout }: SidebarProps) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
     { id: 'categories', label: 'Categories', icon: Tag },
@@ -80,14 +82,14 @@ const Sidebar = ({ activeScreen, setActiveScreen, isMobileOpen, onClose }: Sideb
         })}
       </nav>
 
-      <div className="p-6 border-t border-gray-200">
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100">
-          <p className="text-sm font-medium text-gray-900">Need Help?</p>
-          <p className="text-xs text-gray-600 mt-1">Contact support for assistance</p>
-          <button className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium font-bold">
-            Get Support →
-          </button>
-        </div>
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center px-6 py-3 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 rounded-lg font-medium"
+        >
+          <LogOut className="w-5 h-5 mr-3" />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );

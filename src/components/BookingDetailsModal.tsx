@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, Clock, MapPin, User, Mail, Phone, CreditCard, Tag, Wrench } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, User, Mail, Phone, CreditCard, Tag, Wrench, ShieldCheck, Activity } from 'lucide-react';
 
 interface BookingDetailsModalProps {
   booking: any;
@@ -16,149 +16,235 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     });
   };
 
+  const getStatusColor = (status: string) => {
+    const s = status?.toLowerCase();
+    if (s === 'paid' || s === 'completed') return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+    if (s === 'upcoming' || s === 'accepted') return 'bg-blue-50 text-blue-700 border-blue-100';
+    if (s === 'cancelled' || s === 'rejected') return 'bg-red-50 text-red-700 border-red-100';
+    return 'bg-gray-50 text-gray-700 border-gray-100';
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative animate-in fade-in zoom-in duration-200">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-900">Booking Details</h2>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="w-6 h-6 text-gray-500" />
-          </button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl relative animate-in fade-in zoom-in duration-300 overflow-hidden">
+        {/* Header Section */}
+        <div className="bg-gray-50/50 px-8 py-8 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-3">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Booking Details</h2>
+                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.orderStatus)}`}>
+                  {booking.orderStatus || 'N/A'}
+                </span>
+              </div>
+              <p className="text-gray-400 font-bold text-sm">ID: {booking.orderId}</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-3 hover:bg-white hover:shadow-lg rounded-2xl transition-all text-gray-400 hover:text-red-500"
+            >
+              <X className="w-8 h-8" />
+            </button>
+          </div>
         </div>
 
-        <div className="p-6 space-y-8 max-h-[80vh] overflow-y-auto">
-          {/* Order Information */}
-          <section>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Tag className="w-5 h-5 mr-2 text-blue-600" />
-              Order Information
-            </h3>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-              <p className="text-sm text-gray-600">Order ID: <span className="text-gray-900 font-medium">{booking.orderId}</span></p>
-              <p className="text-sm text-gray-600">Razorpay Order ID: <span className="text-gray-900 font-medium">{booking.razorpayOrderId || 'N/A'}</span></p>
-              <p className="text-sm text-gray-600">Payment ID: <span className="text-gray-900 font-medium">{booking.razorpayPaymentId || 'N/A'}</span></p>
+        <div className="p-8 space-y-10 max-h-[75vh] overflow-y-auto custom-scrollbar">
+          {/* Quick Summary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-5 bg-blue-50/50 rounded-3xl border border-blue-100/50">
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Total Amount</p>
+              <p className="text-2xl font-black text-blue-600 font-mono">₹{booking.amount || booking.finalAmount || 0}</p>
             </div>
-          </section>
+            <div className="p-5 bg-emerald-50/50 rounded-3xl border border-emerald-100/50">
+              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Payment Status</p>
+              <p className="text-2xl font-black text-emerald-600 uppercase text-sm tracking-tighter">{booking.paymentStatus || booking.status || 'CREATED'}</p>
+            </div>
+            <div className="p-5 bg-purple-50/50 rounded-3xl border border-purple-100/50">
+              <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">Work Status</p>
+              <p className="text-2xl font-black text-purple-600 uppercase text-sm tracking-tighter">{booking.work_status || 'NOT STARTED'}</p>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Customer Details */}
-            <section>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <User className="w-5 h-5 mr-2 text-blue-600" />
-                Customer Details
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start">
-                  <User className="w-4 h-4 mt-1 mr-3 text-gray-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* Customer Section */}
+            <section className="space-y-6">
+              <div className="flex items-center space-x-3 pb-2 border-b-2 border-gray-50">
+                <div className="p-2 bg-gray-900 rounded-xl">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Customer Information</h3>
+              </div>
+              <div className="space-y-4 px-1">
+                <div className="flex items-center space-x-4 group">
+                  <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                    <User className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{booking.customerDetails?.name || 'Unknown'}</p>
-                    <p className="text-xs text-gray-500">Name</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name</p>
+                    <p className="text-base font-black text-gray-900">{booking.customerDetails?.name || 'N/A'}</p>
                   </div>
                 </div>
-                <div className="flex items-start">
-                  <Mail className="w-4 h-4 mt-1 mr-3 text-gray-400" />
+                <div className="flex items-center space-x-4 group">
+                  <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                    <Phone className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{booking.customerDetails?.email || 'N/A'}</p>
-                    <p className="text-xs text-gray-500">Email</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mobile Number</p>
+                    <p className="text-base font-black text-gray-900">{booking.customerDetails?.phone || 'N/A'}</p>
                   </div>
                 </div>
-                <div className="flex items-start">
-                  <Phone className="w-4 h-4 mt-1 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{booking.customerDetails?.phone || 'N/A'}</p>
-                    <p className="text-xs text-gray-500">Phone</p>
+                <div className="flex items-center space-x-4 group">
+                  <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                    <Mail className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</p>
+                    <p className="text-base font-black text-gray-900 truncate">{booking.customerDetails?.email || 'N/A'}</p>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* Service Summary */}
-            <section>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Wrench className="w-5 h-5 mr-2 text-blue-600" />
-                Service Details
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{booking.servicePlan?.name || 'Custom Booking'}</p>
-                  <p className="text-xs text-gray-500">Service</p>
+            {/* Service Section */}
+            <section className="space-y-6">
+              <div className="flex items-center space-x-3 pb-2 border-b-2 border-gray-50">
+                <div className="p-2 bg-gray-900 rounded-xl">
+                  <ShieldCheck className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{booking.servicePlan?.category?.name || 'General'}</p>
-                  <p className="text-xs text-gray-500">Category</p>
-                </div>
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-sm font-bold text-blue-600 font-mono">₹{booking.amount}</p>
-                    <p className="text-xs text-gray-500">Total Amount</p>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Service Context</h3>
+              </div>
+              <div className="space-y-4 px-1">
+                <div className="flex items-center space-x-4 group">
+                  <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                    <Wrench className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
                   </div>
-                  <div className="text-right">
-                    <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${
-                      booking.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {booking.status}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">Payment Status</p>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Main Service</p>
+                    <p className="text-base font-black text-gray-900">{booking.servicePlan?.name || 'Custom Booking'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 group">
+                  <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                    <Tag className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Category</p>
+                    <p className="text-base font-black text-blue-600 uppercase tracking-tighter">{booking.servicePlan?.category?.name || 'General'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 group">
+                  <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                    <CreditCard className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Gateway ID</p>
+                    <p className="text-sm font-black text-gray-900">{booking.razorpayOrderId || 'N/A'}</p>
                   </div>
                 </div>
               </div>
             </section>
           </div>
 
-          {/* Appointment Details */}
-          <section>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-blue-600" />
-              Appointment Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4">
-              <div className="flex items-center">
-                <Calendar className="w-4 h-4 mr-3 text-gray-400" />
-                <p className="text-sm text-gray-700">Date: <span className="font-semibold">{booking.bookingDetails?.date || 'N/A'}</span></p>
+          {/* Appointment Section */}
+          <section className="space-y-6">
+            <div className="flex items-center space-x-3 pb-2 border-b-2 border-gray-50">
+              <div className="p-2 bg-gray-900 rounded-xl">
+                <Calendar className="w-5 h-5 text-white" />
               </div>
-              <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-3 text-gray-400" />
-                <p className="text-sm text-gray-700">Time: <span className="font-semibold">{booking.bookingDetails?.time || 'N/A'}</span></p>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">Appointment & Location</h3>
+            </div>
+            <div className="bg-gray-50 rounded-[2rem] p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-200/50">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled Date</p>
+                    <p className="text-lg font-black text-gray-900">{booking.bookingDetails?.date || (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : 'N/A')}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Time Slot</p>
+                    <p className="text-lg font-black text-gray-900">{booking.bookingDetails?.time || (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A')}</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-start md:col-span-2 mt-2">
-                <MapPin className="w-4 h-4 mr-3 mt-1 text-gray-400 flex-shrink-0" />
-                <p className="text-sm text-gray-700">{booking.bookingDetails?.address || booking.addressText || 'N/A'}</p>
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-6 h-6 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Address</p>
+                  <p className="text-base font-bold text-gray-700 leading-relaxed max-w-xl">
+                    {booking.bookingDetails?.address || booking.addressText || 'N/A'}
+                  </p>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Individual Services */}
-          {booking.bookingDetails?.services && booking.bookingDetails?.services.length > 0 && (
-            <section>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Itemized Services:</h3>
-              <div className="border border-gray-100 rounded-xl divide-y divide-gray-100 overflow-hidden">
-                {booking.bookingDetails.services.map((item: any, idx: number) => (
-                  <div key={idx} className="p-3 flex justify-between text-sm">
-                    <span className="text-gray-700">• {item.name}</span>
-                    <span className="text-gray-500 font-mono">₹{item.price} x {item.quantity}</span>
-                  </div>
-                ))}
+          {/* Engineer Section (Conditional) */}
+          {booking.assignedEngineer && (
+            <section className="space-y-6">
+              <div className="flex items-center space-x-3 pb-2 border-b-2 border-gray-50">
+                <div className="p-2 bg-blue-600 rounded-xl">
+                  <ShieldCheck className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Assigned Engineer</h3>
+              </div>
+              <div className="flex items-center space-x-6 p-6 bg-blue-50/30 rounded-[2rem] border border-blue-100">
+                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <p className="text-xl font-black text-gray-900">{booking.assignedEngineer.name}</p>
+                  <p className="text-sm font-bold text-blue-600 flex items-center mt-1">
+                    <Phone className="w-4 h-4 mr-2" /> {booking.assignedEngineer.mobile || 'No Phone'}
+                  </p>
+                </div>
               </div>
             </section>
           )}
 
-          {/* Timestamps */}
-          <div className="pt-6 border-t border-gray-100 grid grid-cols-2 gap-4 text-[10px] text-gray-400 uppercase tracking-wider">
-            <div>
-              <p>Created: {formatDate(booking.createdAt)}</p>
+          {/* Activity Logs / Timestamps */}
+          <section className="space-y-6 pt-4">
+            <div className="flex items-center space-x-3 pb-2 border-b-2 border-gray-50">
+              <div className="p-2 bg-gray-900 rounded-xl">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">Timeline Info</h3>
             </div>
-            <div className="text-right">
-              <p>Updated: {formatDate(booking.updatedAt)}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-6 bg-gray-50 rounded-3xl">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Created At</p>
+                <p className="text-sm font-black text-gray-900">{formatDate(booking.createdAt)}</p>
+              </div>
+              <div className="p-6 bg-gray-50 rounded-3xl">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Updated</p>
+                <p className="text-sm font-black text-gray-900">{formatDate(booking.updatedAt)}</p>
+              </div>
             </div>
-          </div>
+          </section>
+        </div>
+
+        {/* Footer */}
+        <div className="p-8 bg-gray-900 flex justify-end">
+          <button 
+            onClick={onClose}
+            className="px-10 py-4 bg-white text-gray-900 font-black rounded-2xl hover:bg-gray-100 transition-all shadow-xl active:scale-95"
+          >
+            Close Details
+          </button>
         </div>
       </div>
     </div>
