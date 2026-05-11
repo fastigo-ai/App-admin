@@ -62,7 +62,7 @@ const Engineers = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, status]);
+  }, [page, debouncedSearch, status, isBlocked, isVerified]);
 
   useEffect(() => {
     fetchEngineers();

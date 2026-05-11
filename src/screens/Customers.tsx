@@ -55,7 +55,7 @@ const Customers = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, city]);
+  }, [page, debouncedSearch, city, status, isPhoneVerified]);
 
   useEffect(() => {
     fetchCustomers();
