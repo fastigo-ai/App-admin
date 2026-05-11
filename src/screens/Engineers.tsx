@@ -12,6 +12,8 @@ const Engineers = () => {
   const page = parseInt(searchParams.get('page') || '1');
   const status = searchParams.get('status') || 'all';
   const search = searchParams.get('search') || '';
+  const isBlocked = searchParams.get('isBlocked') || 'all';
+  const isVerified = searchParams.get('isVerified') || 'all';
 
   const [engineers, setEngineers] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({
@@ -44,7 +46,9 @@ const Engineers = () => {
         page,
         limit: 9,
         search: debouncedSearch,
-        status
+        status,
+        isBlocked,
+        isVerified
       });
       
       if (res.success) {
@@ -65,8 +69,8 @@ const Engineers = () => {
   }, [fetchEngineers]);
 
   useEffect(() => {
-    setSearchParams({ page: page.toString(), status, search: debouncedSearch }, { replace: true });
-  }, [debouncedSearch, page, status, setSearchParams]);
+    setSearchParams({ page: page.toString(), status, search: debouncedSearch, isBlocked, isVerified }, { replace: true });
+  }, [debouncedSearch, page, status, isBlocked, isVerified, setSearchParams]);
 
   const handleToggleBlock = async (id: string, currentlyBlocked: boolean) => {
     try {
@@ -83,11 +87,19 @@ const Engineers = () => {
   };
 
   const handlePageChange = (newPage: number) => {
-    setSearchParams({ page: newPage.toString(), status, search: debouncedSearch });
+    setSearchParams({ page: newPage.toString(), status, search: debouncedSearch, isBlocked, isVerified });
   };
 
   const handleStatusChange = (newStatus: string) => {
-    setSearchParams({ page: '1', status: newStatus, search: debouncedSearch });
+    setSearchParams({ page: '1', status: newStatus, search: debouncedSearch, isBlocked, isVerified });
+  };
+
+  const handleBlockedChange = (val: string) => {
+    setSearchParams({ page: '1', status, search: debouncedSearch, isBlocked: val, isVerified });
+  };
+
+  const handleVerifiedChange = (val: string) => {
+    setSearchParams({ page: '1', status, search: debouncedSearch, isBlocked, isVerified: val });
   };
 
   const getStatusBadge = (status?: string, isBlocked?: boolean) => {
@@ -171,17 +183,41 @@ const Engineers = () => {
           />
         </div>
         <div className="flex gap-3">
-          <div className="relative min-w-[200px]">
+          <div className="relative min-w-[160px]">
             <Filter className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
             <select
               value={status}
               onChange={(e) => handleStatusChange(e.target.value)}
               className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
             >
-              <option value="all">All Status</option>
-              <option value="online">Online</option>
-              <option value="busy">Busy</option>
-              <option value="offline">Offline</option>
+              <option value="all">ALL STATUS</option>
+              <option value="ONLINE">ONLINE</option>
+              <option value="BUSY">BUSY</option>
+              <option value="OFFLINE">OFFLINE</option>
+            </select>
+          </div>
+          <div className="relative min-w-[160px]">
+            <Shield className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            <select
+              value={isBlocked}
+              onChange={(e) => handleBlockedChange(e.target.value)}
+              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
+            >
+              <option value="all">ALL ACCOUNTS</option>
+              <option value="false">UNBLOCKED</option>
+              <option value="true">BLOCKED</option>
+            </select>
+          </div>
+          <div className="relative min-w-[160px]">
+            <UserCheck className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            <select
+              value={isVerified}
+              onChange={(e) => handleVerifiedChange(e.target.value)}
+              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
+            >
+              <option value="all">ALL VERIFIED</option>
+              <option value="true">VERIFIED</option>
+              <option value="false">PENDING</option>
             </select>
           </div>
         </div>

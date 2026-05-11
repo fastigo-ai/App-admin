@@ -11,6 +11,8 @@ const Customers = () => {
   const page = parseInt(searchParams.get('page') || '1');
   const city = searchParams.get('city') || 'all';
   const search = searchParams.get('search') || '';
+  const status = searchParams.get('status') || 'all';
+  const isPhoneVerified = searchParams.get('isPhoneVerified') || 'all';
 
   const [customers, setCustomers] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({
@@ -37,7 +39,9 @@ const Customers = () => {
         page,
         limit: 9,
         search: debouncedSearch,
-        city
+        city,
+        status,
+        isPhoneVerified
       });
       
       if (res.success) {
@@ -58,15 +62,23 @@ const Customers = () => {
   }, [fetchCustomers]);
 
   useEffect(() => {
-    setSearchParams({ page: page.toString(), city, search: debouncedSearch }, { replace: true });
-  }, [debouncedSearch, page, city, setSearchParams]);
+    setSearchParams({ page: page.toString(), city, search: debouncedSearch, status, isPhoneVerified }, { replace: true });
+  }, [debouncedSearch, page, city, status, isPhoneVerified, setSearchParams]);
 
   const handlePageChange = (newPage: number) => {
-    setSearchParams({ page: newPage.toString(), city, search: debouncedSearch });
+    setSearchParams({ page: newPage.toString(), city, search: debouncedSearch, status, isPhoneVerified });
   };
 
   const handleCityChange = (newCity: string) => {
-    setSearchParams({ page: '1', city: newCity, search: debouncedSearch });
+    setSearchParams({ page: '1', city: newCity, search: debouncedSearch, status, isPhoneVerified });
+  };
+
+  const handleStatusChange = (newStatus: string) => {
+    setSearchParams({ page: '1', city, search: debouncedSearch, status: newStatus, isPhoneVerified });
+  };
+
+  const handlePhoneVerifiedChange = (val: string) => {
+    setSearchParams({ page: '1', city, search: debouncedSearch, status, isPhoneVerified: val });
   };
 
   if (loading && customers.length === 0) {
@@ -138,17 +150,42 @@ const Customers = () => {
           />
         </div>
         <div className="flex gap-3">
-          <div className="relative min-w-[200px]">
+          <div className="relative min-w-[160px]">
             <Filter className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
             <select
               value={city}
               onChange={(e) => handleCityChange(e.target.value)}
               className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
             >
-              <option value="all">All Cities</option>
-              <option value="Noida">Noida</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Gurgaon">Gurgaon</option>
+              <option value="all">ALL CITIES</option>
+              <option value="Noida">NOIDA</option>
+              <option value="Delhi">DELHI</option>
+              <option value="Gurgaon">GURGAON</option>
+            </select>
+          </div>
+          <div className="relative min-w-[160px]">
+            <Activity className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            <select
+              value={status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
+            >
+              <option value="all">ALL STATUS</option>
+              <option value="active">ACTIVE</option>
+              <option value="suspended">SUSPENDED</option>
+              <option value="pending_verification">PENDING</option>
+            </select>
+          </div>
+          <div className="relative min-w-[160px]">
+            <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            <select
+              value={isPhoneVerified}
+              onChange={(e) => handlePhoneVerifiedChange(e.target.value)}
+              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
+            >
+              <option value="all">ALL PHONE</option>
+              <option value="true">VERIFIED</option>
+              <option value="false">NOT VERIFIED</option>
             </select>
           </div>
         </div>

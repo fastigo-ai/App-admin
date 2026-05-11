@@ -1,6 +1,6 @@
 import api from './api';
 
-export const getAllEngineers = async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
+export const getAllEngineers = async (params?: { page?: number; limit?: number; search?: string; status?: string; isBlocked?: string; isVerified?: string }) => {
   const response = await api.get('/engineer/admin/getEngineers', { params });
   return response.data;
 };
