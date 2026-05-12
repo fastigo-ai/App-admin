@@ -38,11 +38,11 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
             <div className="space-y-1">
               <div className="flex items-center space-x-3">
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Booking Details</h2>
-                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.orderStatus)}`}>
-                  {booking.orderStatus || 'N/A'}
+                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.isVendor ? booking.status : booking.orderStatus)}`}>
+                  {booking.isVendor ? booking.status : (booking.orderStatus || 'N/A')}
                 </span>
               </div>
-              <p className="text-gray-400 font-bold text-sm">ID: {booking.orderId}</p>
+              <p className="text-gray-400 font-bold text-sm">{booking.isVendor ? 'Call ID' : 'Order ID'}: {booking.isVendor ? booking.call_id : booking.orderId}</p>
             </div>
             <button 
               onClick={onClose}
@@ -58,11 +58,11 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-5 bg-blue-50/50 rounded-3xl border border-blue-100/50">
               <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Total Amount</p>
-              <p className="text-2xl font-black text-blue-600 font-mono">₹{booking.amount || booking.finalAmount || 0}</p>
+              <p className="text-2xl font-black text-blue-600 font-mono">₹{booking.isVendor ? (booking.order_price || 0) : (booking.amount || booking.finalAmount || 0)}</p>
             </div>
             <div className="p-5 bg-emerald-50/50 rounded-3xl border border-emerald-100/50">
-              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Payment Status</p>
-              <p className="text-2xl font-black text-emerald-600 uppercase text-sm tracking-tighter">{booking.paymentStatus || booking.status || 'CREATED'}</p>
+              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Status</p>
+              <p className="text-2xl font-black text-emerald-600 uppercase text-sm tracking-tighter">{booking.isVendor ? booking.status : (booking.paymentStatus || booking.status || 'CREATED')}</p>
             </div>
             <div className="p-5 bg-purple-50/50 rounded-3xl border border-purple-100/50">
               <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">Work Status</p>
@@ -77,7 +77,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                 <div className="p-2 bg-gray-900 rounded-xl">
                   <User className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-black text-gray-900 tracking-tight">Customer Information</h3>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">{booking.isVendor ? 'Vendor Contact' : 'Customer Information'}</h3>
               </div>
               <div className="space-y-4 px-1">
                 <div className="flex items-center space-x-4 group">
@@ -86,7 +86,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name</p>
-                    <p className="text-base font-black text-gray-900">{booking.customerDetails?.name || 'N/A'}</p>
+                    <p className="text-base font-black text-gray-900">{booking.isVendor ? (booking.contact_name || 'N/A') : (booking.customerDetails?.name || 'N/A')}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 group">
@@ -95,18 +95,31 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mobile Number</p>
-                    <p className="text-base font-black text-gray-900">{booking.customerDetails?.phone || 'N/A'}</p>
+                    <p className="text-base font-black text-gray-900">{booking.isVendor ? (booking.contact_phone || 'N/A') : (booking.customerDetails?.phone || 'N/A')}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 group">
-                  <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
-                    <Mail className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                {!booking.isVendor && (
+                  <div className="flex items-center space-x-4 group">
+                    <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                      <Mail className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</p>
+                      <p className="text-base font-black text-gray-900 truncate">{booking.customerDetails?.email || 'N/A'}</p>
+                    </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</p>
-                    <p className="text-base font-black text-gray-900 truncate">{booking.customerDetails?.email || 'N/A'}</p>
+                )}
+                {booking.isVendor && (
+                  <div className="flex items-center space-x-4 group">
+                    <div className="p-3 bg-gray-50 rounded-2xl transition-colors group-hover:bg-blue-50">
+                      <Activity className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Branch Name</p>
+                      <p className="text-base font-black text-gray-900">{booking.branch_name || 'N/A'}</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </section>
 
@@ -116,7 +129,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                 <div className="p-2 bg-gray-900 rounded-xl">
                   <ShieldCheck className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-black text-gray-900 tracking-tight">Service Context</h3>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">{booking.isVendor ? 'Project Details' : 'Service Context'}</h3>
               </div>
               <div className="space-y-4 px-1">
                 <div className="flex items-center space-x-4 group">
@@ -124,8 +137,8 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                     <Wrench className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Main Service</p>
-                    <p className="text-base font-black text-gray-900">{booking.servicePlan?.name || 'Custom Booking'}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{booking.isVendor ? 'Project ID' : 'Main Service'}</p>
+                    <p className="text-base font-black text-gray-900">{booking.isVendor ? (booking.projectId || 'N/A') : (booking.servicePlan?.name || 'Custom Booking')}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 group">
@@ -133,8 +146,8 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                     <Tag className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Category</p>
-                    <p className="text-base font-black text-blue-600 uppercase tracking-tighter">{booking.servicePlan?.category?.name || 'General'}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{booking.isVendor ? 'Asset Type' : 'Service Category'}</p>
+                    <p className="text-base font-black text-blue-600 uppercase tracking-tighter">{booking.isVendor ? (booking.asset_type || 'N/A') : (booking.servicePlan?.category?.name || 'General')}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 group">
@@ -142,8 +155,8 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                     <CreditCard className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Gateway ID</p>
-                    <p className="text-sm font-black text-gray-900">{booking.razorpayOrderId || 'N/A'}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{booking.isVendor ? 'Support Type' : 'Payment Gateway ID'}</p>
+                    <p className="text-sm font-black text-gray-900">{booking.isVendor ? (booking.support_type || 'N/A') : (booking.razorpayOrderId || 'N/A')}</p>
                   </div>
                 </div>
               </div>
@@ -156,29 +169,31 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
               <div className="p-2 bg-gray-900 rounded-xl">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-xl font-black text-gray-900 tracking-tight">Appointment & Location</h3>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">Location & Time</h3>
             </div>
             <div className="bg-gray-50 rounded-[2rem] p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-200/50">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-blue-600" />
+              {!booking.isVendor && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-200/50">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled Date</p>
+                      <p className="text-lg font-black text-gray-900">{booking.bookingDetails?.date || (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : 'N/A')}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled Date</p>
-                    <p className="text-lg font-black text-gray-900">{booking.bookingDetails?.date || (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : 'N/A')}</p>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Time Slot</p>
+                      <p className="text-lg font-black text-gray-900">{booking.bookingDetails?.time || (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A')}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center">
-                    <Clock className="w-6 h-6 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Time Slot</p>
-                    <p className="text-lg font-black text-gray-900">{booking.bookingDetails?.time || (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A')}</p>
-                  </div>
-                </div>
-              </div>
+              )}
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-6 h-6 text-red-500" />
@@ -186,7 +201,8 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Address</p>
                   <p className="text-base font-bold text-gray-700 leading-relaxed max-w-xl">
-                    {booking.bookingDetails?.address || booking.addressText || 'N/A'}
+                    {booking.isVendor ? (booking.complete_address || 'N/A') : (booking.bookingDetails?.address || booking.addressText || 'N/A')}
+                    {booking.isVendor && booking.pincode && ` - ${booking.pincode}`}
                   </p>
                 </div>
               </div>
@@ -194,7 +210,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
           </section>
 
           {/* Engineer Section (Conditional) */}
-          {booking.assignedEngineer && (
+          {(booking.assignedEngineer || booking.assigned_engineer_id) && (
             <section className="space-y-6">
               <div className="flex items-center space-x-3 pb-2 border-b-2 border-gray-50">
                 <div className="p-2 bg-blue-600 rounded-xl">
@@ -207,9 +223,9 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                   <User className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <p className="text-xl font-black text-gray-900">{booking.assignedEngineer.name}</p>
+                  <p className="text-xl font-black text-gray-900">{(booking.assignedEngineer || booking.assigned_engineer_id).name}</p>
                   <p className="text-sm font-bold text-blue-600 flex items-center mt-1">
-                    <Phone className="w-4 h-4 mr-2" /> {booking.assignedEngineer.mobile || 'No Phone'}
+                    <Phone className="w-4 h-4 mr-2" /> {(booking.assignedEngineer || booking.assigned_engineer_id).mobile || (booking.assignedEngineer || booking.assigned_engineer_id).phone || 'No Phone'}
                   </p>
                 </div>
               </div>
@@ -227,11 +243,11 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
             <div className="grid grid-cols-2 gap-4">
               <div className="p-6 bg-gray-50 rounded-3xl">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Created At</p>
-                <p className="text-sm font-black text-gray-900">{formatDate(booking.createdAt)}</p>
+                <p className="text-sm font-black text-gray-900">{formatDate(booking.createdAt || booking.created_at)}</p>
               </div>
               <div className="p-6 bg-gray-50 rounded-3xl">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Updated</p>
-                <p className="text-sm font-black text-gray-900">{formatDate(booking.updatedAt)}</p>
+                <p className="text-sm font-black text-gray-900">{formatDate(booking.updatedAt || booking.updated_at)}</p>
               </div>
             </div>
           </section>

@@ -9,7 +9,8 @@ import {
   LayoutGrid,
   Tag,
   LogOut,
-  X
+  X,
+  Bell
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +30,7 @@ const Sidebar = ({ activeScreen, setActiveScreen, isMobileOpen, onClose, onLogou
     { id: 'engineers', label: 'Engineers', icon: Users },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'payments', label: 'Payments', icon: CreditCard },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
   ];
 
   const sidebarClasses = `

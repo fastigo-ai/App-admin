@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Download, Eye, DollarSign, CreditCard, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { getAllPayments } from '../api/paymentApi';
 
@@ -10,11 +10,7 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPayments();
-  }, [statusFilter]);
-
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await getAllPayments({ status: statusFilter === 'all' ? undefined : statusFilter });
@@ -27,7 +23,11 @@ const Payments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
 
   const getStatusBadge = (status: string) => {
     const config = {

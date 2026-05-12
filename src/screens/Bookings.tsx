@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import {
   getAllBookings,
+  getAllVendorBookings,
   updateOrderStatus,
   unassignEngineer,
 } from "../api/bookingApi";
@@ -33,12 +34,16 @@ const Bookings = () => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [orderForAssignment, setOrderForAssignment] = useState<any>(null);
+  
+  // New state for booking type
+  const [bookingType, setBookingType] = useState<'user' | 'vendor'>('user');
 
   const [stats, setStats] = useState({
     totalRevenue: 0,
     upcomingCount: 0,
     acceptedCount: 0,
-    completedCount: 0
+    completedCount: 0,
+    pendingCount: 0 // For vendor
   });
 
   const [pagination, setPagination] = useState({
@@ -77,12 +82,17 @@ const Bookings = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getAllBookings({
+      
+      const params = {
         page,
         limit: 10,
         search,
         status: statusFilter
-      });
+      };
+
+      const response = bookingType === 'user' 
+        ? await getAllBookings(params)
+        : await getAllVendorBookings(params);
 
       if (response.success) {
         setBookings(response.data);
@@ -99,7 +109,7 @@ const Bookings = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, bookingType]);
 
   useEffect(() => {
     fetchBookings();
@@ -149,12 +159,23 @@ const Bookings = () => {
 
   const getStatusBadge = (status: string) => {
     const config = {
+      // User Statuses
       Upcoming: "bg-blue-50 text-blue-700 border-blue-100",
       Accepted: "bg-indigo-50 text-indigo-700 border-indigo-100",
       "In Progress": "bg-purple-50 text-purple-700 border-purple-100",
       Completed: "bg-emerald-50 text-emerald-700 border-emerald-100",
       Cancelled: "bg-red-50 text-red-700 border-red-100",
       Rejected: "bg-gray-50 text-gray-700 border-gray-100",
+      
+      // Vendor Statuses
+      PENDING: "bg-amber-50 text-amber-700 border-amber-100",
+      MATCHING: "bg-blue-50 text-blue-700 border-blue-100",
+      ACCEPTED: "bg-indigo-50 text-indigo-700 border-indigo-100",
+      COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      CANCELLED: "bg-red-50 text-red-700 border-red-100",
+      EXPIRED: "bg-gray-50 text-gray-700 border-gray-100",
+      STARTED: "bg-purple-50 text-purple-700 border-purple-100",
+      IN_PROGRESS: "bg-purple-50 text-purple-700 border-purple-100",
     };
     return config[status as keyof typeof config] || config.Upcoming;
   };
@@ -162,7 +183,7 @@ const Bookings = () => {
   const getPaymentBadge = (status: string) => {
     if (status === "PAS_PENDING")
       return "bg-amber-50 text-amber-700 border-amber-100";
-    if (status === "PAID" || status === "paid")
+    if (status === "PAID" || status === "paid" || status === "COMPLETED")
       return "bg-emerald-50 text-emerald-700 border-emerald-100";
     return "bg-gray-50 text-gray-700 border-gray-100";
   };
@@ -219,11 +240,43 @@ const Bookings = () => {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="mb-8">
-        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Booking Management</h1>
-        <p className="text-gray-500 mt-2 font-medium text-lg">
-          Track and manage all service bookings and assignments.
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Booking Management</h1>
+          <p className="text-gray-500 mt-2 font-medium text-lg">
+            Track and manage all service bookings and assignments.
+          </p>
+        </div>
+
+        {/* Tab System */}
+        <div className="flex bg-gray-100 p-1.5 rounded-[2rem] w-fit border border-gray-200/50">
+          <button
+            onClick={() => {
+              setBookingType('user');
+              setSearchParams(prev => { prev.delete('status'); prev.set('page', '1'); return prev; });
+            }}
+            className={`px-8 py-3 rounded-[1.5rem] font-black text-sm transition-all ${
+              bookingType === 'user' 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            User Bookings
+          </button>
+          <button
+            onClick={() => {
+              setBookingType('vendor');
+              setSearchParams(prev => { prev.delete('status'); prev.set('page', '1'); return prev; });
+            }}
+            className={`px-8 py-3 rounded-[1.5rem] font-black text-sm transition-all ${
+              bookingType === 'vendor' 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            Vendor Bookings
+          </button>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -242,8 +295,12 @@ const Bookings = () => {
             <Clock className="w-6 h-6 text-amber-600" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Upcoming</p>
-            <p className="text-2xl font-black text-amber-600">{stats.upcomingCount}</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              {bookingType === 'user' ? 'Upcoming' : 'Pending'}
+            </p>
+            <p className="text-2xl font-black text-amber-600">
+              {bookingType === 'user' ? stats.upcomingCount : (stats as any).pendingCount || 0}
+            </p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center space-x-4 transition-all hover:scale-105">
@@ -270,7 +327,7 @@ const Bookings = () => {
           </div>
           <div>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Revenue</p>
-            <p className="text-2xl font-black text-blue-600">₹{stats.totalRevenue.toLocaleString()}</p>
+            <p className="text-2xl font-black text-blue-600">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -295,13 +352,26 @@ const Bookings = () => {
             className="w-full sm:w-64 px-6 py-4 bg-gray-50 border-none rounded-[2rem] focus:ring-2 focus:ring-blue-500/20 outline-none font-bold text-gray-600 appearance-none cursor-pointer"
           >
             <option value="all">All Status</option>
-            <option value="Upcoming">Upcoming</option>
-            <option value="Accepted">Accepted</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled (All)</option>
-            <option value="CancelledPaid">Cancelled (Paid / Refund Needed)</option>
-            <option value="Rejected">Rejected</option>
+            {bookingType === 'user' ? (
+              <>
+                <option value="Upcoming">Upcoming</option>
+                <option value="Accepted">Accepted</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled (All)</option>
+                <option value="CancelledPaid">Cancelled (Paid / Refund Needed)</option>
+                <option value="Rejected">Rejected</option>
+              </>
+            ) : (
+              <>
+                <option value="PENDING">Pending</option>
+                <option value="MATCHING">Matching</option>
+                <option value="ACCEPTED">Accepted</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="EXPIRED">Expired</option>
+              </>
+            )}
           </select>
           
           <button 
@@ -327,10 +397,10 @@ const Bookings = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Booking ID</th>
-                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</th>
-                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Service</th>
-                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Schedule</th>
+                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">{bookingType === 'user' ? 'Booking ID' : 'Call ID'}</th>
+                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">{bookingType === 'user' ? 'Customer' : 'Vendor Detail'}</th>
+                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">{bookingType === 'user' ? 'Service' : 'Project/Asset'}</th>
+                <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">{bookingType === 'user' ? 'Schedule' : 'Address'}</th>
                 <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Engineer</th>
                 <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
                 <th className="px-8 py-6 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
@@ -339,58 +409,87 @@ const Bookings = () => {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {bookings.map((booking) => {
-                const createdTime = formatDateTime(booking.createdAt);
+                const createdTime = formatDateTime(booking.createdAt || booking.created_at);
                 const scheduledTime = booking.scheduledAt ? formatDateTime(booking.scheduledAt) : null;
+                const displayId = bookingType === 'user' ? booking.orderId : booking.call_id;
+                const currentStatus = bookingType === 'user' ? booking.orderStatus : booking.status;
+                const currentWorkStatus = bookingType === 'user' ? booking.work_status : booking.work_status;
+                const assignedEngineer = bookingType === 'user' ? booking.assignedEngineer : booking.assignedEngineer;
 
                 return (
                   <tr key={booking._id} className="hover:bg-blue-50/30 transition-all duration-300 group">
                     <td className="px-8 py-6">
                       <div className="space-y-1">
-                        <p className="text-sm font-black text-gray-900">{booking.orderId}</p>
+                        <p className="text-sm font-black text-gray-900">{displayId}</p>
                         <p className="text-[10px] font-bold text-gray-400">{createdTime.date} • {createdTime.time}</p>
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-black text-gray-900">{booking.customerDetails?.name || "N/A"}</span>
-                        <span className="text-[11px] font-bold text-gray-400">{booking.customerDetails?.phone || "N/A"}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
-                          {booking.servicePlan?.image ? (
-                            <img src={booking.servicePlan.image} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center"><Wrench className="w-4 h-4 text-gray-300" /></div>
-                          )}
-                        </div>
+                      {bookingType === 'user' ? (
                         <div className="flex flex-col">
-                          <span className="text-sm font-black text-gray-900 truncate max-w-[120px]">{booking.servicePlan?.name || "Service"}</span>
-                          <span className="text-[10px] font-black text-blue-600 uppercase">{booking.servicePlan?.category?.name || "General"}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      {scheduledTime ? (
-                        <div className="flex flex-col">
-                          <span className="text-sm font-black text-gray-900">{scheduledTime.date}</span>
-                          <span className="text-[11px] font-bold text-amber-600 uppercase">{scheduledTime.time}</span>
+                          <span className="text-sm font-black text-gray-900">{booking.customerDetails?.name || "N/A"}</span>
+                          <span className="text-[11px] font-bold text-gray-400">{booking.customerDetails?.phone || "N/A"}</span>
                         </div>
                       ) : (
-                        <span className="text-[11px] font-bold text-gray-300 italic">Unscheduled</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-black text-gray-900">{booking.contact_name || "Vendor Client"}</span>
+                          <span className="text-[11px] font-bold text-gray-400">{booking.contact_phone || "N/A"}</span>
+                          <span className="text-[10px] font-black text-blue-500 uppercase mt-1">{booking.branch_name || "Main Branch"}</span>
+                        </div>
                       )}
                     </td>
                     <td className="px-8 py-6">
-                      {booking.assignedEngineer ? (
+                      {bookingType === 'user' ? (
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
+                            {booking.servicePlan?.image ? (
+                              <img src={booking.servicePlan.image} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center"><Wrench className="w-4 h-4 text-gray-300" /></div>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-black text-gray-900 truncate max-w-[120px]">{booking.servicePlan?.name || "Service"}</span>
+                            <span className="text-[10px] font-black text-blue-600 uppercase">{booking.servicePlan?.category?.name || "General"}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="text-sm font-black text-gray-900">{booking.projectId || "N/A"}</span>
+                          <div className="flex gap-2 mt-1">
+                            <span className="text-[9px] font-black px-2 py-0.5 bg-gray-100 rounded-md text-gray-600 uppercase">{booking.asset_type || "Asset"}</span>
+                            <span className="text-[9px] font-black px-2 py-0.5 bg-blue-50 rounded-md text-blue-600 uppercase">{booking.support_type || "Support"}</span>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-8 py-6">
+                      {bookingType === 'user' ? (
+                        scheduledTime ? (
+                          <div className="flex flex-col">
+                            <span className="text-sm font-black text-gray-900">{scheduledTime.date}</span>
+                            <span className="text-[11px] font-bold text-amber-600 uppercase">{scheduledTime.time}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-bold text-gray-300 italic">Unscheduled</span>
+                        )
+                      ) : (
+                        <div className="max-w-[200px]">
+                          <p className="text-[11px] font-bold text-gray-600 line-clamp-2">{booking.complete_address || "N/A"}</p>
+                          <p className="text-[10px] font-black text-gray-400 mt-1">{booking.pincode || ""}</p>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-8 py-6">
+                      {assignedEngineer ? (
                         <div className="flex flex-col">
                           <div className="flex items-center space-x-2 mb-2">
                             <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
                               <User className="w-3 h-3 text-blue-600" />
                             </div>
-                            <span className="text-[13px] font-black text-gray-900">{booking.assignedEngineer.name}</span>
+                            <span className="text-[13px] font-black text-gray-900">{assignedEngineer.name}</span>
                           </div>
-                          {booking.orderStatus !== 'Completed' && booking.orderStatus !== 'Cancelled' && (
+                          {currentStatus !== 'Completed' && currentStatus !== 'COMPLETED' && currentStatus !== 'Cancelled' && currentStatus !== 'CANCELLED' && (
                             <button
                               onClick={() => handleUnassign(booking._id)}
                               className="text-[10px] font-black text-red-600 hover:text-red-800 uppercase tracking-widest text-left"
@@ -400,7 +499,7 @@ const Bookings = () => {
                           )}
                         </div>
                       ) : (
-                        booking.orderStatus !== 'Completed' && booking.orderStatus !== 'Cancelled' ? (
+                        currentStatus !== 'Completed' && currentStatus !== 'COMPLETED' && currentStatus !== 'Cancelled' && currentStatus !== 'CANCELLED' ? (
                           <button
                             onClick={() => {
                               setOrderForAssignment(booking);
@@ -419,17 +518,30 @@ const Bookings = () => {
                     <td className="px-8 py-6">
                       <div className="relative inline-block">
                         <select
-                          value={booking.orderStatus}
-                          disabled={booking.orderStatus === 'Completed' || booking.orderStatus === 'Cancelled'}
+                          value={currentStatus}
+                          disabled={currentStatus === 'Completed' || currentStatus === 'COMPLETED' || currentStatus === 'Cancelled' || currentStatus === 'CANCELLED'}
                           onChange={(e) => handleStatusChange(booking._id, e.target.value)}
-                          className={`appearance-none pl-4 pr-10 py-2 text-[11px] font-black uppercase tracking-widest rounded-2xl border-none cursor-pointer focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${getStatusBadge(booking.orderStatus)}`}
+                          className={`appearance-none pl-4 pr-10 py-2 text-[11px] font-black uppercase tracking-widest rounded-2xl border-none cursor-pointer focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${getStatusBadge(currentStatus)}`}
                         >
-                          <option value="Upcoming">Upcoming</option>
-                          <option value="Accepted">Accepted</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Cancelled">Cancelled</option>
-                          <option value="Rejected">Rejected</option>
+                          {bookingType === 'user' ? (
+                            <>
+                              <option value="Upcoming">Upcoming</option>
+                              <option value="Accepted">Accepted</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Completed">Completed</option>
+                              <option value="Cancelled">Cancelled</option>
+                              <option value="Rejected">Rejected</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="PENDING">Pending</option>
+                              <option value="MATCHING">Matching</option>
+                              <option value="ACCEPTED">Accepted</option>
+                              <option value="COMPLETED">Completed</option>
+                              <option value="CANCELLED">Cancelled</option>
+                              <option value="EXPIRED">Expired</option>
+                            </>
+                          )}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-current">
                           <ChevronLeft className="w-3 h-3 rotate-[-90deg]" />
@@ -437,11 +549,11 @@ const Bookings = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <span className="text-sm font-black text-gray-900">₹{booking.amount || booking.finalAmount}</span>
-                      <p className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${getPaymentBadge(booking.paymentStatus).split(' ')[1]}`}>
-                        {booking.paymentStatus || "PENDING"}
+                      <span className="text-sm font-black text-gray-900">₹{bookingType === 'user' ? (booking.amount || booking.finalAmount) : booking.order_price}</span>
+                      <p className={`text-[9px] font-black uppercase tracking-tighter mt-1 ${getPaymentBadge(bookingType === 'user' ? booking.paymentStatus : booking.status).split(' ')[1]}`}>
+                        {bookingType === 'user' ? (booking.paymentStatus || "PENDING") : (booking.status === 'COMPLETED' ? "PAID" : "PENDING")}
                       </p>
-                      {booking.orderStatus === 'Cancelled' && (booking.paymentStatus === 'PAID' || booking.paymentStatus === 'paid') && (
+                      {bookingType === 'user' && booking.orderStatus === 'Cancelled' && (booking.paymentStatus === 'PAID' || booking.paymentStatus === 'paid') && (
                         <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black bg-red-100 text-red-600 border border-red-200 animate-pulse uppercase tracking-tighter">
                           Refund Needed
                         </div>
@@ -449,7 +561,7 @@ const Bookings = () => {
                     </td>
                     <td className="px-8 py-6 text-right">
                       <button
-                        onClick={() => setSelectedBooking(booking)}
+                        onClick={() => setSelectedBooking({ ...booking, isVendor: bookingType === 'vendor' })}
                         className="p-3 bg-gray-50 text-gray-400 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm"
                       >
                         <Eye className="w-5 h-5" />

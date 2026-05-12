@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-// const base_url = 'http://localhost:8080/api';
-const production_url = 'https://engineerbackendapp-sxote.ondigitalocean.app/api';
+const base_url = 'http://localhost:8080/api';
+// const base_url = 'https://engineerbackendapp-sxote.ondigitalocean.app/api';
 
 const api = axios.create({
-  baseURL: production_url,
+  baseURL: base_url,
   headers: {
     'Content-Type': 'application/json',
   },

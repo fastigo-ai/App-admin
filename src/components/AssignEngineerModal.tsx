@@ -64,9 +64,9 @@ const AssignEngineerModal: React.FC<AssignEngineerModalProps> = ({ order, onClos
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
             <h3 className="text-sm font-bold text-gray-900 mb-2">Booking Details</h3>
             <div className="space-y-1">
-              <p className="text-xs text-gray-600">Order ID: <span className="text-gray-900 font-medium">{order.orderId}</span></p>
-              <p className="text-xs text-gray-600">Customer: <span className="text-gray-900 font-medium">{order.customerDetails?.name}</span></p>
-              <p className="text-xs text-gray-600">Service: <span className="text-gray-900 font-medium">{order.servicePlan?.name}</span></p>
+              <p className="text-xs text-gray-600">{order.isVendor ? 'Call ID' : 'Order ID'}: <span className="text-gray-900 font-medium">{order.isVendor ? order.call_id : order.orderId}</span></p>
+              <p className="text-xs text-gray-600">Client: <span className="text-gray-900 font-medium">{order.isVendor ? order.contact_name : order.customerDetails?.name}</span></p>
+              <p className="text-xs text-gray-600">{order.isVendor ? 'Project' : 'Service'}: <span className="text-gray-900 font-medium">{order.isVendor ? order.projectId : order.servicePlan?.name}</span></p>
             </div>
           </div>
 
