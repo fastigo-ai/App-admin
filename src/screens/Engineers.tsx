@@ -38,35 +38,35 @@ const Engineers = () => {
   const [selectedEngineerId, setSelectedEngineerId] = useState<string | null>(null);
   const [isDossierOpen, setIsDossierOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchEngineers = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await getAllEngineers({
-          page,
-          limit: 9,
-          search: debouncedSearch,
-          status,
-          isBlocked,
-          isVerified
-        });
-        
-        if (res.success) {
-          setEngineers(res.data);
-          setStats(res.stats);
-          setPagination(res.pagination);
-        }
-      } catch (err: any) {
-        console.error('Error fetching engineers:', err);
-        setError('Failed to load fleet data.');
-      } finally {
-        setLoading(false);
+  const fetchEngineers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await getAllEngineers({
+        page,
+        limit: 9,
+        search: debouncedSearch,
+        status,
+        isBlocked,
+        isVerified
+      });
+      
+      if (res.success) {
+        setEngineers(res.data);
+        setStats(res.stats);
+        setPagination(res.pagination);
       }
-    };
-
-    fetchEngineers();
+    } catch (err: any) {
+      console.error('Error fetching engineers:', err);
+      setError('Failed to load fleet data.');
+    } finally {
+      setLoading(false);
+    }
   }, [page, debouncedSearch, status, isBlocked, isVerified]);
+
+  useEffect(() => {
+    fetchEngineers();
+  }, [fetchEngineers]);
 
   useEffect(() => {
     setSearchParams({ page: page.toString(), status, search: debouncedSearch, isBlocked, isVerified }, { replace: true });
@@ -307,7 +307,7 @@ const Engineers = () => {
                     className={`p-3 rounded-2xl transition-all active:scale-90 ${engineer.isBlocked ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
                     title={engineer.isBlocked ? 'Unblock Engineer' : 'Block Engineer'}
                   >
-                    {engineer.isBlocked ? <CheckCircle2 className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
+                    {engineer.isBlocked ? <CheckCircle className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
                   </button>
                   <button 
                     onClick={() => {

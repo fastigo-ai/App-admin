@@ -5,6 +5,11 @@ export const getAllBookings = async (params?: { page?: number; limit?: number; s
   return response.data;
 };
 
+export const getAllVendorBookings = async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
+  const response = await api.get('/services/admin/allVendorBookings', { params });
+  return response.data;
+};
+
 export const updateOrderStatus = async (id: string, status: string) => {
   const response = await api.put(`/services/admin/updateOrderStatus/${id}`, { status });
   return response.data;
