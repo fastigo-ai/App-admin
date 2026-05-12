@@ -3,6 +3,7 @@ import { Search, User, Phone, Mail, MapPin, Calendar, Star, Loader2, Filter, Ref
 import { getAllCustomers } from '../api/customerApi';
 import { useSearchParams } from 'react-router-dom';
 import { useDebounce } from '../hooks/useDebounce';
+import Pagination from '../components/Pagination';
 
 const Customers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -96,172 +97,155 @@ const Customers = () => {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-10 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gray-900 rounded-2xl">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Customer Database</h1>
-          </div>
-          <p className="text-gray-500 font-bold text-lg">Comprehensive insights into your user base and their lifetime value.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Customer Database</h1>
+          <p className="text-gray-500 mt-1">Comprehensive insights into your user base and their lifetime value.</p>
         </div>
         <button 
           onClick={fetchCustomers}
-          className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-gray-100 rounded-2xl font-black text-gray-600 hover:bg-gray-50 hover:border-gray-200 transition-all shadow-sm active:scale-95"
+          className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-100 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition-all shadow-sm"
         >
-          <RefreshCcw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Records</span>
         </button>
       </div>
 
       {/* Analytics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Total Customers', value: stats.totalCustomers, icon: Users, color: 'blue', sub: 'Signed up professionals' },
-          { label: 'Live Now', value: stats.onlineCount || 0, icon: Activity, color: 'emerald', sub: 'Currently in app' },
-          { label: 'Lifetime Revenue', value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'purple', sub: 'Total transaction volume' },
-          { label: 'Active Users', value: stats.activeCustomers, icon: TrendingUp, color: 'blue', sub: 'Engaged in last 30 days' }
+          { label: 'Total Customers', value: stats.totalCustomers, icon: Users, color: 'blue' },
+          { label: 'Live Now', value: stats.onlineCount || 0, icon: Activity, color: 'emerald' },
+          { label: 'Lifetime Revenue', value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'purple' },
+          { label: 'Active Users', value: stats.activeCustomers, icon: TrendingUp, color: 'blue' }
         ].map((item, idx) => (
-          <div key={idx} className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-50 shadow-sm group">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-4 rounded-3xl bg-${item.color}-50 text-${item.color}-600 group-hover:scale-110 transition-transform`}>
-                <item.icon className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{item.sub}</span>
+          <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">{item.label}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{item.value}</p>
             </div>
-            <p className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">{item.label}</p>
-            <p className="text-4xl font-black text-gray-900">{item.value}</p>
+            <div className={`w-12 h-12 bg-${item.color}-100 rounded-xl flex items-center justify-center text-${item.color}-600`}>
+              <item.icon className="w-6 h-6" />
+            </div>
           </div>
         ))}
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-white rounded-[2.5rem] p-4 border-2 border-gray-50 shadow-sm flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors" />
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
             placeholder="Search by name, phone or email..."
-            className="w-full pl-16 pr-6 py-5 bg-gray-50 border-none rounded-[1.8rem] font-bold text-gray-900 placeholder:text-gray-400 focus:ring-4 focus:ring-blue-500/10 transition-all"
+            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:border-blue-500 focus:bg-white transition-all text-sm outline-none"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-3">
-          <div className="relative min-w-[160px]">
-            <Filter className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-            <select
-              value={city}
-              onChange={(e) => handleCityChange(e.target.value)}
-              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
-            >
-              <option value="all">ALL CITIES</option>
-              <option value="Noida">NOIDA</option>
-              <option value="Delhi">DELHI</option>
-              <option value="Gurgaon">GURGAON</option>
-            </select>
-          </div>
-          <div className="relative min-w-[160px]">
-            <Activity className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-            <select
-              value={status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
-            >
-              <option value="all">ALL STATUS</option>
-              <option value="active">ACTIVE</option>
-              <option value="ONLINE">ONLINE</option>
-              <option value="OFFLINE">OFFLINE</option>
-              <option value="suspended">SUSPENDED</option>
-              <option value="pending_verification">PENDING</option>
-            </select>
-          </div>
-          <div className="relative min-w-[160px]">
-            <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-            <select
-              value={isPhoneVerified}
-              onChange={(e) => handlePhoneVerifiedChange(e.target.value)}
-              className="w-full pl-16 pr-10 py-5 bg-gray-50 border-none rounded-[1.8rem] font-black text-gray-900 appearance-none focus:ring-4 focus:ring-blue-500/10 cursor-pointer uppercase tracking-widest text-[11px]"
-            >
-              <option value="all">ALL PHONE</option>
-              <option value="true">VERIFIED</option>
-              <option value="false">NOT VERIFIED</option>
-            </select>
-          </div>
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={city}
+            onChange={(e) => handleCityChange(e.target.value)}
+            className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold text-gray-700 outline-none cursor-pointer"
+          >
+            <option value="all">ALL CITIES</option>
+            <option value="Noida">NOIDA</option>
+            <option value="Delhi">DELHI</option>
+            <option value="Gurgaon">GURGAON</option>
+          </select>
+          <select
+            value={status}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold text-gray-700 outline-none cursor-pointer"
+          >
+            <option value="all">ALL STATUS</option>
+            <option value="active">ACTIVE</option>
+            <option value="ONLINE">ONLINE</option>
+            <option value="OFFLINE">OFFLINE</option>
+            <option value="suspended">SUSPENDED</option>
+            <option value="pending_verification">PENDING</option>
+          </select>
+          <select
+            value={isPhoneVerified}
+            onChange={(e) => handlePhoneVerifiedChange(e.target.value)}
+            className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold text-gray-700 outline-none cursor-pointer"
+          >
+            <option value="all">ALL PHONE</option>
+            <option value="true">VERIFIED</option>
+            <option value="false">NOT VERIFIED</option>
+          </select>
         </div>
       </div>
 
-      {/* Fleet Grid */}
+      {/* Customer Grid */}
       {error ? (
-        <div className="bg-red-50 rounded-[2.5rem] p-12 text-center border-2 border-red-100">
-          <Loader2 className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-black text-gray-900 mb-2">Sync Failed</h3>
-          <p className="text-gray-600 font-bold mb-8">{error}</p>
-          <button onClick={fetchCustomers} className="px-8 py-3 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all">Retry Link</button>
+        <div className="bg-red-50 rounded-xl p-8 text-center border border-red-100">
+          <Loader2 className="w-12 h-12 text-red-500 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-gray-900 mb-1">Sync Failed</h3>
+          <p className="text-sm text-gray-600 mb-6">{error}</p>
+          <button onClick={fetchCustomers} className="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors">Retry Link</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {customers.map((customer) => (
-            <div key={customer._id} className="bg-white rounded-[2.5rem] border-2 border-gray-50 p-8 hover:shadow-2xl hover:border-blue-100 transition-all duration-500 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8">
-                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${customer.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-gray-50 text-gray-700 border-gray-100'}`}>
+            <div key={customer._id} className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-all duration-300 relative">
+              <div className="absolute top-4 right-4">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${customer.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-gray-50 text-gray-700 border-gray-100'}`}>
                   {customer.status || 'PENDING'}
                 </span>
               </div>
 
-              <div className="flex items-center space-x-6 mb-8">
-                <div className="relative">
-                  <div className="w-20 h-20 bg-gray-100 rounded-[2rem] overflow-hidden group-hover:scale-110 transition-transform duration-500">
-                    <img
-                      src={customer.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=random&size=128&bold=true`}
-                      alt={customer.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden border border-gray-100 flex-shrink-0">
+                  <img
+                    src={customer.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=random&size=128&bold=true`}
+                    alt={customer.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-gray-900 leading-tight mb-1">{customer.name}</h3>
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4 text-emerald-500" />
-                    <span className="text-sm font-black text-gray-900">LTV: ₹{(customer.totalSpent || 0).toLocaleString()}</span>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight">{customer.name}</h3>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-xs font-bold text-gray-900">LTV: ₹{(customer.totalSpent || 0).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center space-x-4 group/item">
-                  <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
-                    <Phone className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-gray-400" />
                   </div>
-                  <p className="text-sm font-bold text-gray-600">{customer.mobile || 'No Phone'}</p>
+                  <p className="text-sm font-medium text-gray-600">{customer.mobile || 'No Phone'}</p>
                 </div>
-                <div className="flex items-center space-x-4 group/item">
-                  <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
-                    <Mail className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center">
+                    <Mail className="w-4 h-4 text-gray-400" />
                   </div>
-                  <p className="text-sm font-bold text-gray-600 truncate">{customer.email || 'No Email'}</p>
+                  <p className="text-sm font-medium text-gray-600 truncate">{customer.email || 'No Email'}</p>
                 </div>
-                <div className="flex items-start space-x-4 group/item">
-                  <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-blue-50 transition-colors">
-                    <MapPin className="w-4 h-4 text-gray-400 group-hover/item:text-blue-500" />
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-4 h-4 text-gray-400" />
                   </div>
-                  <p className="text-sm font-bold text-gray-600 line-clamp-2">{customer.city || 'Location not updated'}</p>
+                  <p className="text-sm font-medium text-gray-600 line-clamp-1">{customer.city || 'Location not updated'}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-6 border-t-2 border-gray-50">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Total Bookings</span>
-                  <span className="text-lg font-black text-gray-900">{customer.totalBookings || 0} Orders</span>
+              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Bookings</p>
+                  <p className="text-lg font-bold text-gray-900">{customer.totalBookings || 0}</p>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Last Activity</span>
-                  <span className="text-lg font-black text-gray-900">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Last Active</p>
+                  <p className="text-lg font-bold text-gray-900 truncate">
                     {customer.lastBookingDate ? new Date(customer.lastBookingDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : 'Never'}
-                  </span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -269,28 +253,11 @@ const Customers = () => {
         </div>
       )}
 
-      {/* Pagination */}
-      {!loading && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-4 pt-10">
-          <button
-            disabled={page === 1}
-            onClick={() => handlePageChange(page - 1)}
-            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 transition-all hover:border-blue-500 text-gray-600 active:scale-90"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div className="px-8 py-4 bg-gray-900 rounded-[1.5rem] text-white font-black text-sm tracking-widest">
-            PAGE {page} <span className="text-gray-500 mx-2">OF</span> {pagination.totalPages}
-          </div>
-          <button
-            disabled={page === pagination.totalPages}
-            onClick={() => handlePageChange(page + 1)}
-            className="p-4 bg-white border-2 border-gray-100 rounded-[1.5rem] disabled:opacity-30 transition-all hover:border-blue-500 text-gray-600 active:scale-90"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
-      )}
+      <Pagination 
+        currentPage={page}
+        totalPages={pagination.totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };
