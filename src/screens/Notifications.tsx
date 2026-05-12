@@ -21,7 +21,8 @@ import {
   ExternalLink,
   MoreVertical,
   Trash2,
-  Settings
+  Settings,
+  Eye
 } from "lucide-react";
 import { getAllCustomers } from "../api/customerApi";
 import { getAllEngineers } from "../api/engineerApi";
@@ -669,7 +670,7 @@ const Notifications = () => {
                 </thead>
               <tbody className="divide-y divide-gray-50">
                 {isFetchingHistory ? (
-                  Array(5).fill(0).map((_, i) => (
+                  [0, 1, 2, 3, 4].map((_, i) => (
                     <tr key={i} className="animate-pulse">
                       <td colSpan={7} className="px-6 py-4">
                         <div className="h-12 bg-gray-50 rounded-xl w-full" />
@@ -759,6 +760,7 @@ const Notifications = () => {
               </div>
             </div>
           )}
+          </div>
         </div>
       )}
     </div>
