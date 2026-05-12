@@ -11,6 +11,7 @@ import Payments from './screens/Payments';
 import Categories from './screens/Categories';
 import Login from './screens/Login';
 import Notifications from './screens/Notifications';
+import Coupons from './screens/Coupons';
 import api from './api/api';
 import { Toaster } from 'react-hot-toast';
 
@@ -131,6 +132,7 @@ function App() {
             <Route path="/categories" element={<Categories />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/coupons" element={<Coupons />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/login" element={<Navigate to="/dashboard" replace />} />
           </Routes>
