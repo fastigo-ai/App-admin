@@ -79,8 +79,8 @@ const Notifications = () => {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [isFetchingUsers, setIsFetchingUsers] = useState(false);
 
-  // History State
   const [history, setHistory] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotalPages, setHistoryTotalPages] = useState(1);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
@@ -119,6 +119,7 @@ const Notifications = () => {
     try {
       const res = await getNotificationHistory({ page: historyPage, limit: 10 });
       setHistory(res.data || []);
+      setStats(res.stats || null);
       setHistoryTotalPages(res.pagination?.pages || 1);
     } catch (err) {
       toast.error("Failed to fetch history");
@@ -602,33 +603,70 @@ const Notifications = () => {
         </div>
       ) : (
         /* History Section */
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center">
-              <HistoryIcon className="w-5 h-5 mr-2 text-blue-600" />
-              Notification History Logs
-            </h2>
-            <button 
-              onClick={fetchHistory}
-              className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-blue-600"
-            >
-              <RefreshCcw className={`w-5 h-5 ${isFetchingHistory ? "animate-spin" : ""}`} />
-            </button>
-          </div>
+        <div className="space-y-6">
+          {/* Performance Dashboard */}
+          {stats && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Broadcasts</p>
+                  <p className="text-3xl font-black text-gray-900">{stats.total}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                  <Send className="w-6 h-6" />
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Opens</p>
+                  <p className="text-3xl font-black text-gray-900">{stats.opened}</p>
+                </div>
+                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                  <Eye className="w-6 h-6" />
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Open Rate</p>
+                  <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">{stats.openRate}%</span>
+                </div>
+                <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full transition-all duration-1000" 
+                    style={{ width: `${stats.openRate}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50/50 text-left">
-                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Recipient</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Message</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Type</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Status</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Scheduled</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Sent At</th>
-                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Actions</th>
-                </tr>
-              </thead>
+          <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center">
+                <HistoryIcon className="w-5 h-5 mr-2 text-blue-600" />
+                Detailed Delivery Logs
+              </h2>
+              <button 
+                onClick={fetchHistory}
+                className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-blue-600"
+              >
+                <RefreshCcw className={`w-5 h-5 ${isFetchingHistory ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50/50 text-left">
+                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Recipient</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Message</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Type</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Opened At</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Sent At</th>
+                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                  </tr>
+                </thead>
               <tbody className="divide-y divide-gray-50">
                 {isFetchingHistory ? (
                   Array(5).fill(0).map((_, i) => (
@@ -671,10 +709,8 @@ const Notifications = () => {
                         {getStatusBadge(log.status)}
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-xs text-gray-500">
-                          {log.nextRunAt && new Date(log.nextRunAt) > new Date(log.createdAt) 
-                            ? formatDate(log.nextRunAt) 
-                            : "-"}
+                        <p className="text-xs text-gray-500 font-bold">
+                          {log.openedAt ? formatDate(log.openedAt) : "Not opened yet"}
                         </p>
                       </td>
                       <td className="px-6 py-4">
