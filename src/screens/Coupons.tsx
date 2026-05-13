@@ -16,7 +16,8 @@ import {
   User as UserIcon,
   MapPin,
   Tag as TagIcon,
-  Edit3
+  Edit3,
+  AlignLeft
 } from 'lucide-react';
 import { 
   getAllCoupons, 
@@ -46,6 +47,7 @@ const Coupons: React.FC = () => {
   // Form State
   const [formData, setFormData] = useState<Partial<Coupon>>({
     code: '',
+    description: '',
     type: 'FLAT',
     value: 0,
     minOrderAmount: 0,
@@ -120,6 +122,7 @@ const Coupons: React.FC = () => {
     setEditingCouponId(coupon._id);
     setFormData({
       code: coupon.code,
+      description: coupon.description || '',
       type: coupon.type,
       value: coupon.type === 'FLAT' ? coupon.value / 100 : coupon.value,
       minOrderAmount: coupon.minOrderAmount / 100,
@@ -137,8 +140,6 @@ const Coupons: React.FC = () => {
       },
       isHidden: coupon.isHidden
     });
-    // If there were specific users, we'd need to fetch their names to show chips correctly
-    // For now, just show the IDs if we don't have names
     setSelectedUserDetails(coupon.targeting?.specificUsers?.map(id => ({ _id: id, name: 'Targeted User' })) || []);
     setIsModalOpen(true);
   };
@@ -222,6 +223,7 @@ const Coupons: React.FC = () => {
   const resetForm = () => {
     setFormData({
       code: '',
+      description: '',
       type: 'FLAT',
       value: 0,
       minOrderAmount: 0,
@@ -508,6 +510,18 @@ const Coupons: React.FC = () => {
                           className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl outline-none font-bold text-gray-900 transition-all"
                           value={formData.value}
                           onChange={(e) => setFormData({...formData, value: Number(e.target.value)})}
+                        />
+                      </div>
+                      <div className="md:col-span-3 space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
+                          <AlignLeft className="w-3 h-3 mr-1" /> Description
+                        </label>
+                        <input 
+                          type="text"
+                          placeholder="e.g. Get 50% OFF on your first booking"
+                          className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl outline-none font-medium text-gray-900 transition-all"
+                          value={formData.description}
+                          onChange={(e) => setFormData({...formData, description: e.target.value})}
                         />
                       </div>
                     </div>

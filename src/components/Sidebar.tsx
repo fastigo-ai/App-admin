@@ -11,7 +11,8 @@ import {
   LogOut,
   X,
   Bell,
-  Ticket
+  Ticket,
+  Wallet
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +32,7 @@ const Sidebar = ({ activeScreen, setActiveScreen, isMobileOpen, onClose, onLogou
     { id: 'engineers', label: 'Engineers', icon: Users },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'payments', label: 'Payments', icon: CreditCard },
+    { id: 'finance', label: 'Finance', icon: Wallet },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'coupons', label: 'Coupons', icon: Ticket },
   ];

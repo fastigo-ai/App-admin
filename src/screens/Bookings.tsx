@@ -113,6 +113,15 @@ const Bookings = () => {
   }, [page, search, statusFilter, bookingType]);
 
   useEffect(() => {
+    const handleOpenAssignModal = (e: any) => {
+      setOrderForAssignment(e.detail);
+      setIsAssignModalOpen(true);
+    };
+    window.addEventListener('OPEN_ASSIGN_MODAL', handleOpenAssignModal);
+    return () => window.removeEventListener('OPEN_ASSIGN_MODAL', handleOpenAssignModal);
+  }, []);
+
+  useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
@@ -167,6 +176,7 @@ const Bookings = () => {
       Completed: "bg-emerald-50 text-emerald-700 border-emerald-100",
       Cancelled: "bg-red-50 text-red-700 border-red-100",
       Rejected: "bg-gray-50 text-gray-700 border-gray-100",
+      ExpertUnavailable: "bg-orange-50 text-orange-700 border-orange-100",
       
       // Vendor Statuses
       PENDING: "bg-amber-50 text-amber-700 border-amber-100",

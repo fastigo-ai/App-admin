@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Calendar, Clock, MapPin, User, Mail, Phone, CreditCard, Tag, Wrench, ShieldCheck, Activity } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, User, Mail, Phone, CreditCard, Tag, Wrench, ShieldCheck, Activity, RefreshCw, UserPlus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface BookingDetailsModalProps {
   booking: any;
@@ -26,6 +26,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
     if (s === 'paid' || s === 'completed') return 'bg-emerald-50 text-emerald-700 border-emerald-100';
     if (s === 'upcoming' || s === 'accepted') return 'bg-blue-50 text-blue-700 border-blue-100';
     if (s === 'cancelled' || s === 'rejected') return 'bg-red-50 text-red-700 border-red-100';
+    if (s === 'expertunavailable') return 'bg-orange-50 text-orange-700 border-orange-100';
     return 'bg-gray-50 text-gray-700 border-gray-100';
   };
 
@@ -223,11 +224,43 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
           </section>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 bg-gray-900 flex justify-end">
+        {/* Footer with Actions */}
+        <div className="p-6 bg-gray-900 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {!booking.assignedEngineer && !booking.assigned_engineer_id && booking.orderStatus !== 'Cancelled' && (
+              <>
+                <button 
+                  onClick={() => {
+                    if (window.confirm('Send notifications to nearby engineers again?')) {
+                      // Call re-dispatch
+                      import('../api/bookingApi').then(m => m.redispatchOrder(booking._id))
+                        .then(() => toast.success('Notifications sent!'))
+                        .catch(() => toast.error('Failed to redispatch'));
+                    }
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-600/30 font-bold rounded-xl hover:bg-blue-600/30 transition-all text-xs uppercase tracking-wider"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Re-dispatch</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    // Logic to trigger manual assignment modal
+                    onClose();
+                    // This is handled by parent (Bookings.tsx)
+                    window.dispatchEvent(new CustomEvent('OPEN_ASSIGN_MODAL', { detail: booking }));
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-600/30 font-bold rounded-xl hover:bg-emerald-600/30 transition-all text-xs uppercase tracking-wider"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Assign Partner</span>
+                </button>
+              </>
+            )}
+          </div>
           <button 
             onClick={onClose}
-            className="px-8 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all active:scale-95 shadow-lg"
+            className="px-8 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all active:scale-95 shadow-lg text-sm"
           >
             Close Details
           </button>

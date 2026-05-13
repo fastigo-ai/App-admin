@@ -22,6 +22,11 @@ export const unassignEngineer = async (orderId: string) => {
 };
 
 export const assignEngineer = async (orderId: string, engineerId: string) => {
-  const response = await api.put(`/engineer/assignEngineerToOrder/${orderId}`, { engineerId });
+  const response = await api.post(`/admin/orders/${orderId}/assign`, { engineerId });
+  return response.data;
+};
+
+export const redispatchOrder = async (orderId: string) => {
+  const response = await api.post(`/admin/orders/${orderId}/redispatch`);
   return response.data;
 };
