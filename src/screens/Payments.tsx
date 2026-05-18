@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Download, Eye, DollarSign, CreditCard, Clock, CheckCircle, Loader2 } from 'lucide-react';
+import { Search, Download, Eye, DollarSign, CreditCard, Clock, CheckCircle, Loader2, RefreshCcw } from 'lucide-react';
 import { getAllPayments } from '../api/paymentApi';
 
 const Payments = () => {
@@ -81,66 +81,58 @@ const Payments = () => {
 
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
-        <p className="text-gray-600 mt-2">Track all payments, commissions, and financial transactions.</p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Payment Management</h1>
+          <p className="text-gray-500 mt-1">Track all payments, commissions, and financial transactions.</p>
+        </div>
+        <button 
+          onClick={fetchPayments}
+          className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-100 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition-all shadow-sm"
+        >
+          <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <span>Refresh Ledger</span>
+        </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: 'Total Revenue', value: totalRevenue, icon: DollarSign, color: 'blue', prefix: '₹' },
+          { label: 'Total Payouts', value: totalRevenue - totalCommission, icon: CheckCircle, color: 'emerald', prefix: '₹' },
+          { label: 'Pending', value: pendingAmount, icon: Clock, color: 'amber', prefix: '₹' },
+          { label: 'Commission', value: totalCommission, icon: CreditCard, color: 'indigo', prefix: '₹' }
+        ].map((item, idx) => (
+          <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">₹{totalRevenue.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-500">{item.label}</p>
+              <p className={`text-2xl font-bold mt-1 ${item.color === 'emerald' ? 'text-emerald-600' : item.color === 'amber' ? 'text-amber-600' : 'text-gray-900'}`}>
+                {item.prefix}{item.value.toLocaleString()}
+              </p>
             </div>
-            <DollarSign className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Payouts</p>
-              <p className="text-2xl font-bold text-green-600">₹{(totalRevenue - totalCommission).toLocaleString()}</p>
+            <div className={`w-12 h-12 bg-${item.color === 'indigo' ? 'blue' : item.color}-100 rounded-xl flex items-center justify-center text-${item.color === 'indigo' ? 'blue' : item.color}-600`}>
+              <item.icon className="w-6 h-6" />
             </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-amber-600">₹{pendingAmount.toLocaleString()}</p>
-            </div>
-            <Clock className="w-8 h-8 text-amber-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Commission</p>
-              <p className="text-2xl font-bold text-blue-600">₹{totalCommission.toLocaleString()}</p>
-            </div>
-            <CreditCard className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
+        ))}
       </div>
+
       {/* Header Actions & Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
             placeholder="Search by customer, ID, or invoice..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:border-blue-500 focus:bg-white transition-all text-sm outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-3">
           <select 
-            className="flex-1 md:flex-none px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold text-gray-700 outline-none cursor-pointer"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -150,7 +142,7 @@ const Payments = () => {
             <option value="failed">Failed</option>
             <option value="refunded">Refunded</option>
           </select>
-          <button className="flex-1 md:flex-none flex items-center justify-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+          <button className="flex items-center px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
             <Download className="w-4 h-4 mr-2" />
             Export
           </button>
@@ -158,86 +150,82 @@ const Payments = () => {
       </div>
 
       {/* Payments Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center p-12">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
-            <p className="text-gray-500">Loading payment data...</p>
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+            <p className="text-gray-500 font-medium">Syncing transactions...</p>
           </div>
         ) : error ? (
-          <div className="p-12 text-center">
-            <p className="text-red-500">{error}</p>
+          <div className="p-20 text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-red-600 text-xl font-bold">!</span>
+            </div>
+            <p className="text-red-600 font-bold">{error}</p>
             <button 
               onClick={fetchPayments}
-              className="mt-4 text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50"
+              className="mt-6 px-6 py-2 bg-gray-900 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors"
             >
-              Retry
+              Retry Connection
             </button>
           </div>
         ) : filteredPayments.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
-            No payments found matching your criteria.
+          <div className="p-20 text-center">
+            <Search className="w-12 h-12 text-gray-100 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900">No transactions found</h3>
+            <p className="text-sm text-gray-500 mt-1">Try adjusting your filters.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Details</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engineer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-left">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Payment Details</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Service</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Amount</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Method</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Commission</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {filteredPayments.map((payment) => (
                   <tr key={payment._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{payment.paymentId}</p>
-                        <p className="text-xs text-gray-500">Booking: {payment.orderId?.orderId || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(payment.createdAt).toLocaleDateString()} at {new Date(payment.createdAt).toLocaleTimeString()}
-                        </p>
-                        {payment.razorpayPaymentId && (
-                          <p className="text-xs text-gray-400">TXN: {payment.razorpayPaymentId}</p>
-                        )}
-                      </div>
+                      <p className="text-sm font-bold text-gray-900">{payment.paymentId}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Booking: {payment.orderId?.orderId || 'N/A'}</p>
+                      <p className="text-[10px] text-gray-400">
+                        {new Date(payment.createdAt).toLocaleDateString()} • {new Date(payment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {payment.orderId?.customerDetails?.name || payment.userId?.name || 'Unknown'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payment.orderId?.servicePlan?.name || 'Multiple Services'}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <p className="max-w-[150px] truncate">{payment.orderId?.servicePlan?.name || 'Multiple Services'}</p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payment.orderId?.assignedEngineer?.name || 'Not Assigned'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
                       ₹{payment.amount?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="mr-2">{getPaymentMethodIcon(payment.method)}</span>
-                        <span className="text-sm text-gray-900 capitalize">{payment.method || 'Other'}</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{getPaymentMethodIcon(payment.method)}</span>
+                        <span className="text-xs font-bold text-gray-600 uppercase">{payment.method || 'Other'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(payment.status)}`}>
-                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border uppercase tracking-wider ${getStatusBadge(payment.status)}`}>
+                        {payment.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-blue-600">
                       ₹{(payment.amount * 0.25).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
-                        <Eye className="w-4 h-4" />
+                    <td className="px-6 py-4 text-right">
+                      <button className="p-2 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg transition-colors">
+                        <Eye className="w-5 h-5" />
                       </button>
                     </td>
                   </tr>

@@ -30,6 +30,40 @@ export interface SendCampaignParams {
   staggerMinutes?: number;
 }
 
+export interface NotificationHistoryItem {
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    mobile: string;
+  };
+  userModel: string;
+  type: string;
+  title: string;
+  body: string;
+  image?: string;
+  screen?: string;
+  status: string;
+  openedAt?: string;
+  createdAt: string;
+}
+
+export interface NotificationHistoryResponse {
+  success: boolean;
+  data: NotificationHistoryItem[];
+  stats: {
+    total: number;
+    opened: number;
+    openRate: number | string;
+  };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}
+
 export const sendNotification = async (params: SendNotificationParams) => {
   const response = await api.post('/admin/notification/send', params);
   return response.data;
@@ -40,8 +74,7 @@ export const sendCampaign = async (params: SendCampaignParams) => {
   return response.data;
 };
 
-export const getNotificationHistory = async (params?: { page?: number; limit?: number; search?: string; type?: string; status?: string }) => {
+export const getNotificationHistory = async (params?: { page?: number; limit?: number; search?: string; type?: string; status?: string }): Promise<NotificationHistoryResponse> => {
   const response = await api.get('/admin/notification/history', { params });
   return response.data;
 };
-
