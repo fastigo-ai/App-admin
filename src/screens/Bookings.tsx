@@ -441,8 +441,12 @@ const Bookings = () => {
                             )}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900 truncate max-w-[150px]">{booking.servicePlan?.name || "Service"}</p>
-                            <p className="text-[10px] text-blue-600 font-bold uppercase">{booking.servicePlan?.category?.name || "General"}</p>
+                            <p className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
+                              {booking.servicePlan?.name || (booking.bookingDetails?.services?.length > 0 ? booking.bookingDetails.services.map((s: any) => s.name).join(', ') : "Service")}
+                            </p>
+                            <p className="text-[10px] text-blue-600 font-bold uppercase">
+                              {booking.servicePlan?.category?.name || "General"}
+                            </p>
                           </div>
                         </div>
                       ) : (
